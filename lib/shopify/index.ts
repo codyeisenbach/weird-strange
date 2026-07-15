@@ -373,23 +373,35 @@ export async function getCollections(): Promise<Collection[]> {
     query: getCollectionsQuery,
   });
   const shopifyCollections = removeEdgesAndNodes(res.body?.data?.collections);
+  // Filter out the `hidden` collections.
+  // Collections that start with `hidden-*` need to be hidden on the search page.
+  const filteredCollections = reshapeCollections(shopifyCollections).filter(
+    (collection) => !collection.handle.startsWith("hidden")
+  );
+
+  // Only inject the synthetic "All" entry if a real `all` collection
+  // doesn't already exist, to avoid showing "All" twice.
+  const hasAllCollection = filteredCollections.some(
+    (collection) => collection.handle === "all"
+  );
+
   const collections = [
-    {
-      handle: "",
-      title: "All",
-      description: "All products",
-      seo: {
-        title: "All",
-        description: "All products",
-      },
-      path: "/search",
-      updatedAt: new Date().toISOString(),
-    },
-    // Filter out the `hidden` collections.
-    // Collections that start with `hidden-*` need to be hidden on the search page.
-    ...reshapeCollections(shopifyCollections).filter(
-      (collection) => !collection.handle.startsWith("hidden")
-    ),
+    ...(hasAllCollection
+      ? []
+      : [
+          {
+            handle: "",
+            title: "All",
+            description: "All products",
+            seo: {
+              title: "All",
+              description: "All products",
+            },
+            path: "/search",
+            updatedAt: new Date().toISOString(),
+          },
+        ]),
+    ...filteredCollections,
   ];
 
   return collections;
