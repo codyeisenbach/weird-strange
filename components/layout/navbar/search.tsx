@@ -10,7 +10,7 @@ export default function Search() {
   return (
     <Form
       action="/search"
-      className="w-max-[550px] relative w-full sm:w-60 flex"
+      className="w-max-[550px] relative w-full lg:w-80 xl:w-full"
     >
       <input
         key={searchParams?.get("q")}
