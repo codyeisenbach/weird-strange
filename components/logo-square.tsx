@@ -1,5 +1,8 @@
 import clsx from "clsx";
+import Image from "next/image";
 import LogoIcon from "./icons/logo";
+
+const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL;
 
 export default function LogoSquare({ size }: { size?: "sm" | undefined }) {
   return (
@@ -12,12 +15,25 @@ export default function LogoSquare({ size }: { size?: "sm" | undefined }) {
         },
       )}
     >
-      <LogoIcon
-        className={clsx({
-          "h-[16px] w-[16px]": !size,
-          "h-[10px] w-[10px]": size === "sm",
-        })}
-      />
+      {logoUrl ? (
+        <Image
+          src={logoUrl}
+          alt="Logo"
+          width={size === "sm" ? 20 : 32}
+          height={size === "sm" ? 20 : 32}
+          className={clsx("object-contain", {
+            "h-[32px] w-[32px]": !size,
+            "h-[20px] w-[20px]": size === "sm",
+          })}
+        />
+      ) : (
+        <LogoIcon
+          className={clsx({
+            "h-[16px] w-[16px]": !size,
+            "h-[10px] w-[10px]": size === "sm",
+          })}
+        />
+      )}
     </div>
   );
 }

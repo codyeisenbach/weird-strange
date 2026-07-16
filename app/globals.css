@@ -3,6 +3,11 @@
 @plugin "@tailwindcss/container-queries";
 @plugin "@tailwindcss/typography";
 
+@theme {
+  --color-ws-cream: #f4f1ea;
+  --color-ws-charcoal: #333333;
+}
+
 @layer base {
   *,
   ::after,
@@ -10,6 +15,10 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
+  }
+
+  body {
+    @apply bg-ws-cream;
   }
 }
 

@@ -1,19 +1,19 @@
 import CartModal from "components/cart/modal";
-import LogoSquare from "components/logo-square";
 import { getMenu } from "lib/shopify";
 import { Menu } from "lib/shopify/types";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import MobileMenu from "./mobile-menu";
 import Search, { SearchSkeleton } from "./search";
 
-const { SITE_NAME } = process.env;
+const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL;
 
 export async function Navbar() {
   const menu = await getMenu("main-menu");
 
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6">
+    <nav className="relative flex items-center justify-between p-4 lg:px-6 border-b border-[#111111] text-ws-charcoal">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
           <MobileMenu menu={menu} />
@@ -26,10 +26,16 @@ export async function Navbar() {
             prefetch={true}
             className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
           >
-            <LogoSquare />
-            <div className="ml-2 flex-none text-sm font-medium uppercase md:hidden lg:block">
-              {SITE_NAME}
-            </div>
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt="Logo"
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+                priority
+              />
+            ) : null}
           </Link>
           {menu.length ? (
             <ul className="hidden gap-6 text-sm md:flex md:items-center">
@@ -38,7 +44,7 @@ export async function Navbar() {
                   <Link
                     href={item.path}
                     prefetch={true}
-                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+                    className="text-ws-charcoal underline-offset-4 hover:underline"
                   >
                     {item.title}
                   </Link>
