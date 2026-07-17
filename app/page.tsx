@@ -2,6 +2,8 @@ import { Carousel } from "components/carousel";
 import { ThreeItemGrid } from "components/grid/three-items";
 import { ImageBanner } from "components/image-banner";
 import Footer from "components/layout/footer";
+import { ProductCarousel } from "components/product-carousel";
+import { getCollectionProducts, getProducts } from "lib/shopify";
 
 export const metadata = {
   description:
@@ -11,7 +13,15 @@ export const metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Prefer the curated collection; fall back to the full catalog until it exists.
+  const collectionProducts = await getCollectionProducts({
+    collection: "hidden-homepage-carousel",
+  });
+  const carouselProducts = collectionProducts.length
+    ? collectionProducts
+    : await getProducts({});
+
   return (
     <>
       <ImageBanner
@@ -19,6 +29,7 @@ export default function HomePage() {
         href="/search"
         alt="Shop the collection"
       />
+      <ProductCarousel products={carouselProducts} />
       <ThreeItemGrid />
       <Carousel />
       <Footer />
