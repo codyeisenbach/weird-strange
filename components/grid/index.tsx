@@ -49,10 +49,11 @@ function ProductCards({
             currencyCode={product.priceRange.maxVariantPrice.currencyCode}
             className="text-sm text-ws-charcoal"
           />
-          {product.tags.length ? (
-            <p className="text-xs text-neutral-500">
-              {product.tags.join(", ")}
-            </p>
+          {product.descriptionHtml ? (
+            <div
+              className="prose-sm max-w-none text-xs text-neutral-500 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0"
+              dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+            />
           ) : null}
         </div>
       </Link>

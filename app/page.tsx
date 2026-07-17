@@ -24,12 +24,14 @@ export default async function HomePage() {
 
   return (
     <>
-      <ImageBanner
-        src="https://images.weirdstrange.com/banners/home-banner.png"
-        href="/search"
-        alt="Shop the collection"
-      />
-      <ProductCarousel products={carouselProducts} />
+      <div className="px-8">
+        <ImageBanner
+          src="https://images.weirdstrange.com/banners/home-banner.png"
+          href="/search"
+          alt="Shop the collection"
+        />
+        <ProductCarousel products={carouselProducts} />
+      </div>
       <ThreeItemGrid />
       <Carousel />
       <Footer />

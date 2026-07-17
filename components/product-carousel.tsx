@@ -34,7 +34,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
     "flex h-11 w-11 items-center justify-center border border-ws-charcoal text-ws-charcoal transition-opacity disabled:opacity-30";
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full my-4">
       <div ref={emblaRef} className="overflow-hidden">
         <ul className="flex gap-4">
           {products.map((product) => (
