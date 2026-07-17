@@ -27,20 +27,20 @@ function ProductCards({
       <Link
         href={`/product/${product.handle}`}
         prefetch={true}
-        className="inline-block"
+        className="block"
       >
-        <div className="relative h-[368px] w-[300px] overflow-hidden border border-ws-charcoal">
+        <div className="relative aspect-[300/368] w-full overflow-hidden border border-ws-charcoal">
           {product.featuredImage?.url ? (
             <Image
               src={product.featuredImage.url}
               alt={product.title}
               fill
-              sizes="300px"
+              sizes="(min-width: 768px) 25vw, 300px"
               className="object-cover"
             />
           ) : null}
         </div>
-        <div className="mt-2 flex w-[300px] flex-col gap-1">
+        <div className="mt-2 flex w-full flex-col gap-1">
           <h3 className="text-sm font-medium text-ws-charcoal">
             {product.title}
           </h3>

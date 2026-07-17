@@ -41,7 +41,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
             <ProductCards
               key={product.handle}
               product={product}
-              className="flex-none"
+              className="w-[300px] flex-none"
             />
           ))}
         </ul>

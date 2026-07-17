@@ -1,4 +1,5 @@
 import { Carousel } from "components/carousel";
+import Grid, { ProductCards } from "components/grid";
 import { ThreeItemGrid } from "components/grid/three-items";
 import { ImageBanner } from "components/image-banner";
 import Footer from "components/layout/footer";
@@ -25,11 +26,18 @@ export default async function HomePage() {
   return (
     <>
       <div className="px-8">
-        <ImageBanner
-          src="https://images.weirdstrange.com/banners/home-banner.png"
-          href="/search"
-          alt="Shop the collection"
-        />
+        <Grid className="grid-cols-4 items-stretch">
+          <li className="col-span-3 min-w-0">
+            <ImageBanner
+              src="https://images.weirdstrange.com/banners/home-banner.png"
+              href="/search"
+              alt="Shop the collection"
+            />
+          </li>
+          {carouselProducts[0] ? (
+            <ProductCards product={carouselProducts[0]} className="col-span-1 my-4" />
+          ) : null}
+        </Grid>
         <ProductCarousel products={carouselProducts} />
       </div>
       <ThreeItemGrid />
