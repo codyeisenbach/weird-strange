@@ -3,10 +3,10 @@ import { Navbar } from "components/layout/navbar";
 import { WelcomeToast } from "components/welcome-toast";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
+import { baseUrl } from "lib/utils";
 import { ReactNode } from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { baseUrl } from "lib/utils";
 
 const { SITE_NAME } = process.env;
 
@@ -32,10 +32,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={GeistSans.variable}>
-      <body className="bg-ws-cream text-ws-charcoal selection:bg-teal-300 dark:selection:bg-pink-500 dark:selection:text-white">
+      <body className="bg-ws-cream flex justify-center flex-col w-full text-ws-charcoal selection:bg-teal-300 dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
           <Navbar />
-          <main>
+          <main className="pt-4 flex flex-col max-w-[1280px] justify-center self-center w-full">
             {children}
             <Toaster closeButton />
             <WelcomeToast />

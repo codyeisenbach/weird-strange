@@ -1,12 +1,13 @@
 import {
   exchangeCodeForTokens,
   OAUTH_COOKIES,
+  requestOrigin,
   SESSION_COOKIES,
 } from "lib/shopify/customer";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const origin = request.nextUrl.origin;
+  const origin = requestOrigin(request);
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
   const storedState = request.cookies.get(OAUTH_COOKIES.state)?.value;
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     const tokens = await exchangeCodeForTokens({ code, verifier, origin });
 
-    const response = NextResponse.redirect(new URL("/account", request.url));
+    const response = NextResponse.redirect(new URL("/account", origin));
     const cookieOptions = {
       httpOnly: true,
       secure: origin.startsWith("https"),

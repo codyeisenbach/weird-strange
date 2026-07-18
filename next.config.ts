@@ -1,4 +1,7 @@
 export default {
+  // Allow local dev through a Cloudflare quick tunnel (HTTPS for Shopify
+  // customer-account OAuth callbacks).
+  allowedDevOrigins: ["*.trycloudflare.com"],
   experimental: {
     ppr: true,
     inlineCss: true,

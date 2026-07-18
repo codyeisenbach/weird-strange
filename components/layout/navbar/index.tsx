@@ -8,24 +8,26 @@ import { Suspense } from "react";
 import MobileMenu from "./mobile-menu";
 import Search, { SearchSkeleton } from "./search";
 
-const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL;
+const logoUrl =
+  process.env.NEXT_PUBLIC_LOGO_URL ??
+  "https://cdn.shopify.com/s/files/1/0993/4713/6831/files/WEird_Strange_Logo_black.png?v=1784229972";
 
 export async function Navbar() {
   const menu = await getMenu("main-menu");
 
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6 border-b border-[#111111] text-ws-charcoal">
+    <nav className="relative flex items-center justify-center p-4 lg:px-6 border-b border-[#111111] text-ws-charcoal">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
           <MobileMenu menu={menu} />
         </Suspense>
       </div>
-      <div className="flex w-full items-center">
+      <div className="flex w-full items-center justify-between max-w-[1280px] px-8">
         <div className="flex w-full md:w-1/3">
           <Link
             href="/"
             prefetch={true}
-            className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
+            className="flex w-full items-center justify-center md:w-auto"
           >
             {logoUrl ? (
               <Image
@@ -33,7 +35,7 @@ export async function Navbar() {
                 alt="Logo"
                 width={120}
                 height={32}
-                className="h-8 w-auto object-contain"
+                className="h-8 w-auto object-contain mr-8"
                 priority
               />
             ) : null}

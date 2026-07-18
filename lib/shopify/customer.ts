@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "crypto";
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 
 const clientId = process.env.SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID;
 const shopId = process.env.SHOPIFY_SHOP_ID;
@@ -8,6 +9,18 @@ const authBase = `https://shopify.com/authentication/${shopId}`;
 const customerApiUrl = `https://shopify.com/${shopId}/account/customer/api/2025-04/graphql`;
 
 export const customerAccountConfigured = Boolean(clientId && shopId);
+
+// Origin as seen by the client — respects proxy headers so the OAuth
+// redirect_uri is correct behind tunnels (local dev) and Vercel.
+export function requestOrigin(request: NextRequest): string {
+  const host =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (!host) return request.nextUrl.origin;
+  const proto =
+    request.headers.get("x-forwarded-proto") ??
+    request.nextUrl.protocol.replace(":", "");
+  return `${proto}://${host}`;
+}
 
 export const SESSION_COOKIES = {
   accessToken: "customer_access_token",

@@ -4,6 +4,7 @@ import {
   generateCodeVerifier,
   generateState,
   OAUTH_COOKIES,
+  requestOrigin,
 } from "lib/shopify/customer";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/account", request.url));
   }
 
-  const origin = request.nextUrl.origin;
+  const origin = requestOrigin(request);
   const state = generateState();
   const verifier = generateCodeVerifier();
 

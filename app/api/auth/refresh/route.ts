@@ -1,8 +1,12 @@
-import { refreshAccessToken, SESSION_COOKIES } from "lib/shopify/customer";
+import {
+  refreshAccessToken,
+  requestOrigin,
+  SESSION_COOKIES,
+} from "lib/shopify/customer";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const origin = request.nextUrl.origin;
+  const origin = requestOrigin(request);
   const next = request.nextUrl.searchParams.get("next") || "/account";
   const refreshToken = request.cookies.get(
     SESSION_COOKIES.refreshToken,

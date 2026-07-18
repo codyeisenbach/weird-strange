@@ -25,7 +25,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="px-8">
+      <div className="px-8 w-full">
         <Grid className="grid-cols-4 items-stretch">
           <li className="col-span-3 min-w-0">
             <ImageBanner
@@ -35,7 +35,7 @@ export default async function HomePage() {
             />
           </li>
           {carouselProducts[0] ? (
-            <ProductCards product={carouselProducts[0]} className="col-span-1 my-4" />
+            <ProductCards product={carouselProducts[0]} className="col-span-1" />
           ) : null}
         </Grid>
         <ProductCarousel products={carouselProducts} />
