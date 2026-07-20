@@ -35,7 +35,10 @@ export default async function HomePage() {
             />
           </li>
           {carouselProducts[0] ? (
-            <ProductCards product={carouselProducts[0]} className="col-span-1" />
+            <ProductCards
+              product={carouselProducts[0]}
+              className="col-span-1 border border-ws-charcoal"
+            />
           ) : null}
         </Grid>
         <ProductCarousel products={carouselProducts} />

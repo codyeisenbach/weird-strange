@@ -29,7 +29,7 @@ function ProductCards({
         prefetch={true}
         className="block"
       >
-        <div className="relative aspect-[300/368] w-full overflow-hidden border border-ws-charcoal">
+        <div className="relative aspect-[300/368] w-full overflow-hidden">
           {product.featuredImage?.url ? (
             <Image
               src={product.featuredImage.url}
@@ -40,15 +40,17 @@ function ProductCards({
             />
           ) : null}
         </div>
-        <div className="mt-2 flex w-full flex-col gap-1">
-          <h3 className="text-sm font-medium text-ws-charcoal">
-            {product.title}
-          </h3>
-          <Price
-            amount={product.priceRange.maxVariantPrice.amount}
-            currencyCode={product.priceRange.maxVariantPrice.currencyCode}
-            className="text-sm text-ws-charcoal"
-          />
+        <div className="mt-2 flex w-full flex-col gap-1 pb-2 px-2">
+          <div className="flex w-full justify-between">
+            <h3 className="text-sm font-medium text-ws-charcoal">
+              {product.title}
+            </h3>
+            <Price
+              amount={product.priceRange.maxVariantPrice.amount}
+              currencyCode={product.priceRange.maxVariantPrice.currencyCode}
+              className="text-sm text-ws-charcoal"
+            />
+          </div>
           {product.descriptionHtml ? (
             <div
               className="prose-sm max-w-none text-xs text-neutral-500 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0"

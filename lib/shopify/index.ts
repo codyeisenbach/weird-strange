@@ -149,7 +149,7 @@ const reshapeCollection = (
 
   return {
     ...collection,
-    path: `/search/${collection.handle}`,
+    path: `/collections/${collection.handle}`,
   };
 };
 
@@ -425,13 +425,13 @@ export async function getMenu(handle: string): Promise<Menu[]> {
   });
 
   return (
-    res.body?.data?.menu?.items.map((item: { title: string; url: string }) => ({
-      title: item.title,
-      path: item.url
-        .replace(domain, "")
-        .replace("/collections", "/search")
-        .replace("/pages", ""),
-    })) || []
+    res.body?.data?.menu?.items.map((item: { title: string; url: string }) => {
+      const url = new URL(item.url, domain || "https://placeholder.invalid");
+      return {
+        title: item.title,
+        path: `${url.pathname}${url.search}`.replace("/pages", ""),
+      };
+    }) || []
   );
 }
 
