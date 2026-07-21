@@ -139,7 +139,7 @@ export async function getArtist(
 
   const { data: artistRow, error: artistError } = await supabase
     .from("artists")
-    .select("id, slug, name, created_at, image_path, image_alt")
+    .select("id, slug, name, created_at, image_path, image_alt, bio")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -196,6 +196,7 @@ export async function getArtist(
 
   return {
     ...reshapeArtist(artistRow),
+    bio: artistRow.bio,
     publications,
     products,
   };
@@ -212,7 +213,7 @@ export async function getPublication(
 
   const { data: publicationRow, error: publicationError } = await supabase
     .from("publications")
-    .select("id, slug, title, created_at, image_path, image_alt")
+    .select("id, slug, title, created_at, image_path, image_alt, description")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -268,6 +269,7 @@ export async function getPublication(
 
   return {
     ...reshapePublication(publicationRow),
+    description: publicationRow.description,
     artists,
     products,
   };

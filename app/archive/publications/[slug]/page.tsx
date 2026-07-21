@@ -1,9 +1,13 @@
-import { ArchiveTile } from "components/archive/tile";
 import { GridTileImage } from "components/grid/tile";
+import {
+  WikiArticle,
+  WikiInfobox,
+  WikiLink,
+  WikiSection,
+} from "components/archive/wiki-article";
 import Footer from "components/layout/footer";
 import { getPublication } from "lib/archive";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -17,7 +21,7 @@ export async function generateMetadata(props: {
 
   return {
     title: publication.title,
-    description: `${publication.title} in the archive.`,
+    description: publication.description || `${publication.title} in the archive.`,
   };
 }
 
@@ -31,52 +35,40 @@ export default async function PublicationPage(props: {
 
   return (
     <>
-      <section className="mx-auto max-w-(--breakpoint-2xl) px-4 py-12">
-        <div className="flex flex-col gap-8 sm:flex-row">
-          {publication.imagePath ? (
-            <div className="relative aspect-square w-full max-w-xs shrink-0 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-              <Image
-                src={publication.imagePath}
-                alt={publication.imageAlt || publication.title}
-                fill
-                sizes="320px"
-                className="object-cover"
-              />
-            </div>
-          ) : null}
-          <div>
-            <h1 className="text-3xl font-bold text-ws-charcoal">
-              {publication.title}
-            </h1>
-          </div>
-        </div>
-
-        {publication.artists.length > 0 ? (
-          <div className="mt-12">
-            <h2 className="text-xl font-semibold text-ws-charcoal">
-              Artists
-            </h2>
-            <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {publication.artists.map((artist) => (
-                <li key={artist.id}>
-                  <ArchiveTile
-                    href={`/archive/artists/${artist.slug}`}
-                    src={artist.imagePath}
-                    alt={artist.imageAlt || artist.name}
-                    title={artist.name}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
+      <WikiArticle
+        title={publication.title}
+        subtitle="From the Weird Strange Archive"
+        body={publication.description}
+        infobox={
+          <WikiInfobox
+            title={publication.title}
+            src={publication.imagePath}
+            alt={publication.imageAlt || publication.title}
+            facts={[
+              {
+                label: "Artists",
+                value:
+                  publication.artists.length > 0 ? (
+                    <ul>
+                      {publication.artists.map((artist) => (
+                        <li key={artist.id}>
+                          <WikiLink href={`/archive/artists/${artist.slug}`}>
+                            {artist.name}
+                          </WikiLink>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "—"
+                  ),
+              },
+            ]}
+          />
+        }
+      >
         {publication.products.length > 0 ? (
-          <div className="mt-12">
-            <h2 className="text-xl font-semibold text-ws-charcoal">
-              Related products
-            </h2>
-            <ul className="mt-4 flex w-full gap-4 overflow-x-auto pt-1">
+          <WikiSection title="Related products">
+            <ul className="flex w-full gap-4 overflow-x-auto pt-1">
               {publication.products.map((product) => (
                 <li
                   key={product.handle}
@@ -103,9 +95,9 @@ export default async function PublicationPage(props: {
                 </li>
               ))}
             </ul>
-          </div>
+          </WikiSection>
         ) : null}
-      </section>
+      </WikiArticle>
       <Footer />
     </>
   );

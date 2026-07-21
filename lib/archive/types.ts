@@ -34,11 +34,13 @@ export type PublicationWithSortOrder = Publication & {
 };
 
 export type ArtistDetail = Artist & {
+  bio: string | null;
   publications: PublicationWithSortOrder[];
   products: Product[];
 };
 
 export type PublicationDetail = Publication & {
+  description: string | null;
   artists: ArtistWithSortOrder[];
   products: Product[];
 };

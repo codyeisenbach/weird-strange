@@ -1,9 +1,13 @@
-import { ArchiveTile } from "components/archive/tile";
 import { GridTileImage } from "components/grid/tile";
+import {
+  WikiArticle,
+  WikiInfobox,
+  WikiLink,
+  WikiSection,
+} from "components/archive/wiki-article";
 import Footer from "components/layout/footer";
 import { getArtist } from "lib/archive";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -17,7 +21,7 @@ export async function generateMetadata(props: {
 
   return {
     title: artist.name,
-    description: `${artist.name} in the archive.`,
+    description: artist.bio || `${artist.name} in the archive.`,
   };
 }
 
@@ -31,52 +35,42 @@ export default async function ArtistPage(props: {
 
   return (
     <>
-      <section className="mx-auto max-w-(--breakpoint-2xl) px-4 py-12">
-        <div className="flex flex-col gap-8 sm:flex-row">
-          {artist.imagePath ? (
-            <div className="relative aspect-square w-full max-w-xs shrink-0 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-              <Image
-                src={artist.imagePath}
-                alt={artist.imageAlt || artist.name}
-                fill
-                sizes="320px"
-                className="object-cover"
-              />
-            </div>
-          ) : null}
-          <div>
-            <h1 className="text-3xl font-bold text-ws-charcoal">
-              {artist.name}
-            </h1>
-          </div>
-        </div>
-
-        {artist.publications.length > 0 ? (
-          <div className="mt-12">
-            <h2 className="text-xl font-semibold text-ws-charcoal">
-              Publications
-            </h2>
-            <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {artist.publications.map((publication) => (
-                <li key={publication.id}>
-                  <ArchiveTile
-                    href={`/archive/publications/${publication.slug}`}
-                    src={publication.imagePath}
-                    alt={publication.imageAlt || publication.title}
-                    title={publication.title}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
+      <WikiArticle
+        title={artist.name}
+        subtitle="From the Weird Strange Archive"
+        body={artist.bio}
+        infobox={
+          <WikiInfobox
+            title={artist.name}
+            src={artist.imagePath}
+            alt={artist.imageAlt || artist.name}
+            facts={[
+              {
+                label: "Publications",
+                value:
+                  artist.publications.length > 0 ? (
+                    <ul>
+                      {artist.publications.map((publication) => (
+                        <li key={publication.id}>
+                          <WikiLink
+                            href={`/archive/publications/${publication.slug}`}
+                          >
+                            {publication.title}
+                          </WikiLink>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "—"
+                  ),
+              },
+            ]}
+          />
+        }
+      >
         {artist.products.length > 0 ? (
-          <div className="mt-12">
-            <h2 className="text-xl font-semibold text-ws-charcoal">
-              Related products
-            </h2>
-            <ul className="mt-4 flex w-full gap-4 overflow-x-auto pt-1">
+          <WikiSection title="Related products">
+            <ul className="flex w-full gap-4 overflow-x-auto pt-1">
               {artist.products.map((product) => (
                 <li
                   key={product.handle}
@@ -103,9 +97,9 @@ export default async function ArtistPage(props: {
                 </li>
               ))}
             </ul>
-          </div>
+          </WikiSection>
         ) : null}
-      </section>
+      </WikiArticle>
       <Footer />
     </>
   );
