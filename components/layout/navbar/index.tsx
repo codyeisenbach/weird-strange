@@ -23,7 +23,7 @@ export async function Navbar() {
         </Suspense>
       </div>
       <div className="flex w-full items-center justify-between max-w-[1280px] px-8">
-        <div className="flex w-full md:w-1/3">
+        <div className="flex w-full md:w-fit">
           <Link
             href="/"
             prefetch={true}
@@ -56,17 +56,17 @@ export async function Navbar() {
             </ul>
           ) : null}
         </div>
-        <div className="hidden justify-center md:flex md:w-1/3">
+        <div className="flex items-center justify-end gap-2 md:w-fit">
+        <div className="hidden justify-center md:flex">
           <Suspense fallback={<SearchSkeleton />}>
             <Search />
           </Suspense>
         </div>
-        <div className="flex items-center justify-end gap-2 md:w-1/3">
           <Link
             href="/account"
             prefetch={false}
             aria-label="Account"
-            className="flex h-11 w-11 items-center justify-center rounded-md border border-neutral-200 text-ws-charcoal transition-colors dark:border-neutral-700"
+            className="flex h-11 w-11 items-center justify-center text-ws-charcoal transition-colors"
           >
             <UserIcon className="h-4 transition-all ease-in-out hover:scale-110" />
           </Link>
