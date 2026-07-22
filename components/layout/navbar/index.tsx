@@ -40,6 +40,8 @@ export async function Navbar() {
               />
             ) : null}
           </Link>
+        </div>
+        <div className="flex w-fit items-center justify-center">
           {menu.length ? (
             <ul className="hidden gap-6 text-sm md:flex md:items-center">
               {menu.map((item: Menu) => (
@@ -56,19 +58,19 @@ export async function Navbar() {
             </ul>
           ) : null}
         </div>
-        <div className="flex items-center justify-end gap-2 md:w-fit">
-        <div className="hidden justify-center md:flex">
-          <Suspense fallback={<SearchSkeleton />}>
-            <Search />
-          </Suspense>
-        </div>
+        <div className="flex items-center justify-end md:w-fit">
+          <div className="hidden justify-center md:flex">
+            <Suspense fallback={<SearchSkeleton />}>
+              <Search />
+            </Suspense>
+          </div>
           <Link
             href="/account"
             prefetch={false}
             aria-label="Account"
             className="flex h-11 w-11 items-center justify-center text-ws-charcoal transition-colors"
           >
-            <UserIcon className="h-4 transition-all ease-in-out hover:scale-110" />
+            <UserIcon className="h-5 w-5 transition-transform ease-in-out active:scale-125" />
           </Link>
           <CartModal />
         </div>

@@ -40,7 +40,7 @@ export default function Search() {
         }}
         className="absolute right-0 top-0 flex h-11 w-11 shrink-0 items-center justify-center text-ws-charcoal"
       >
-        <MagnifyingGlassIcon className="h-4 transition-transform ease-in-out active:scale-125" />
+        <MagnifyingGlassIcon className="h-5 w-5 transition-transform ease-in-out active:scale-125" />
       </button>
     </Form>
   );
@@ -50,7 +50,7 @@ export function SearchSkeleton() {
   return (
     <form className="relative flex h-11 w-11 items-center justify-end">
       <div className="absolute right-0 top-0 flex h-11 w-11 shrink-0 items-center justify-center text-ws-charcoal">
-        <MagnifyingGlassIcon className="h-4" />
+        <MagnifyingGlassIcon className="h-5 w-5" />
       </div>
     </form>
   );
