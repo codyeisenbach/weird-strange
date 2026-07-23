@@ -49,9 +49,11 @@ export function VariantSelector({
     <form key={option.id}>
       <dl className="mb-8">
         <dt className="mb-4 text-sm uppercase tracking-wide">{option.name}</dt>
-        <dd className="flex flex-wrap gap-3">
+        <dd className="flex gap-3">
           {option.values.map((value) => {
             const optionNameLowerCase = option.name.toLowerCase();
+
+            console.log("option.values: ", option.values);
 
             // Base option params on current searchParams so we can preserve any other param state.
             const optionParams: Record<string, string> = {};

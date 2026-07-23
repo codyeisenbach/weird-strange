@@ -181,6 +181,30 @@ const reshapeImages = (images: Connection<Image>, productTitle: string) => {
   });
 };
 
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
+
+const reshapeOptions = (options: ShopifyProduct["options"]) => {
+  return options.map((option) => {
+    if (option.name.toLowerCase() !== "size") {
+      return option;
+    }
+
+    return {
+      ...option,
+      values: [...option.values].sort((a, b) => {
+        const aIndex = SIZE_ORDER.indexOf(a.toUpperCase());
+        const bIndex = SIZE_ORDER.indexOf(b.toUpperCase());
+
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+
+        return aIndex - bIndex;
+      }),
+    };
+  });
+};
+
 const reshapeProduct = (
   product: ShopifyProduct,
   filterHiddenProducts: boolean = true
@@ -192,10 +216,11 @@ const reshapeProduct = (
     return undefined;
   }
 
-  const { images, variants, ...rest } = product;
+  const { images, variants, options, ...rest } = product;
 
   return {
     ...rest,
+    options: reshapeOptions(options),
     images: reshapeImages(images, product.title),
     variants: removeEdgesAndNodes(variants),
   };
