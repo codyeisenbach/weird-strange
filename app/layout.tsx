@@ -1,5 +1,6 @@
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar } from "components/layout/navbar";
+import { SaleBanner } from "components/layout/sale-banner";
 import { WelcomeToast } from "components/welcome-toast";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
@@ -34,6 +35,7 @@ export default async function RootLayout({
     <html lang="en" className={GeistSans.variable}>
       <body className="bg-ws-cream flex justify-center flex-col w-full text-ws-charcoal selection:bg-teal-300 dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
+          <SaleBanner />
           <Navbar />
           <main className="pt-4 flex flex-col max-w-[1280px] justify-center self-center w-full">
             {children}
