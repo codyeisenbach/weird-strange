@@ -22,13 +22,22 @@ function ProductCards({
 }: {
   product: Product;
 } & React.ComponentProps<"li">) {
+  const firstAvailableVariant = product.variants.find(
+    (variant) => variant.availableForSale,
+  );
+  const variantParams = new URLSearchParams(
+    firstAvailableVariant?.selectedOptions.map(({ name, value }) => [
+      name.toLowerCase(),
+      value,
+    ]),
+  ).toString();
+  const href = variantParams
+    ? `/product/${product.handle}?${variantParams}`
+    : `/product/${product.handle}`;
+
   return (
     <li {...props} className={clsx("transition-opacity", className)}>
-      <Link
-        href={`/product/${product.handle}`}
-        prefetch={true}
-        className="block"
-      >
+      <Link href={href} prefetch={true} className="block">
         <div className="relative aspect-[300/368] w-full overflow-hidden">
           {product.featuredImage?.url ? (
             <Image
