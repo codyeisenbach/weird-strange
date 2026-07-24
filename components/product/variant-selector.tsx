@@ -53,8 +53,6 @@ export function VariantSelector({
           {option.values.map((value) => {
             const optionNameLowerCase = option.name.toLowerCase();
 
-            console.log("option.values: ", option.values);
-
             // Base option params on current searchParams so we can preserve any other param state.
             const optionParams: Record<string, string> = {};
             searchParams.forEach((v, k) => (optionParams[k] = v));
@@ -87,12 +85,13 @@ export function VariantSelector({
                 disabled={!isAvailableForSale}
                 title={`${option.name} ${value}${!isAvailableForSale ? " (Out of Stock)" : ""}`}
                 className={clsx(
-                  "flex min-w-[48px] items-center justify-center rounded-full border border-ws-charcoal/20 bg-ws-cream px-2 py-1 text-sm text-ws-charcoal",
+                  "flex min-w-[48px] items-center justify-center rounded-full border border-ws-charcoal/20 px-2 py-1 text-sm",
                   {
-                    "cursor-default ring-2 ring-ws-charcoal": isActive,
-                    "ring-1 ring-transparent transition duration-300 ease-in-out hover:ring-ws-charcoal":
+                    "cursor-default bg-ws-charcoal text-white ring-2 ring-ws-charcoal":
+                      isActive,
+                    "bg-ws-cream text-ws-charcoal ring-1 ring-transparent transition duration-300 ease-in-out hover:ring-ws-charcoal":
                       !isActive && isAvailableForSale,
-                    "relative z-10 cursor-not-allowed overflow-hidden text-ws-charcoal/40 ring-1 ring-ws-charcoal/20 before:absolute before:inset-x-0 before:-z-10 before:h-px before:-rotate-45 before:bg-ws-charcoal/20 before:transition-transform":
+                    "relative z-10 cursor-not-allowed overflow-hidden bg-ws-cream text-ws-charcoal/40 ring-1 ring-ws-charcoal/20 before:absolute before:inset-x-0 before:-z-10 before:h-px before:-rotate-45 before:bg-ws-charcoal/20 before:transition-transform":
                       !isAvailableForSale,
                   },
                 )}
