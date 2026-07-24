@@ -13,7 +13,7 @@ export function ImageBanner({
   return (
     <Link
       href={href}
-      className="group relative block h-full w-full overflow-hidden border border-[#111111] dark:border-neutral-800"
+      className="group relative block h-full w-full overflow-hidden border border-ws-charcoal"
     >
       <Image
         src={src}
