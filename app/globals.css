@@ -17,6 +17,11 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
   body {
     @apply bg-ws-cream;
   }
