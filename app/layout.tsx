@@ -1,7 +1,6 @@
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar } from "components/layout/navbar";
 import { SaleBanner } from "components/layout/sale-banner";
-import { WelcomeToast } from "components/welcome-toast";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
 import { baseUrl } from "lib/utils";
@@ -40,7 +39,6 @@ export default async function RootLayout({
           <main className="pt-4 flex flex-col max-w-[1280px] justify-center self-center w-full">
             {children}
             <Toaster closeButton />
-            <WelcomeToast />
           </main>
         </CartProvider>
       </body>
