@@ -1,3 +1,4 @@
+import { BannerCarousel } from "components/banner-carousel";
 import { Carousel } from "components/carousel";
 import Grid, { ProductCards } from "components/grid";
 import { ThreeItemGrid } from "components/grid/three-items";
@@ -14,6 +15,22 @@ export const metadata = {
   },
 };
 
+// TODO: swap for real marketing banner images once they exist.
+const PLACEHOLDER_BANNER_IMAGES = [
+  {
+    src: "https://images.weirdstrange.com/banners/home-banner.png",
+    alt: "Placeholder banner 1",
+  },
+  {
+    src: "https://images.weirdstrange.com/banners/home-banner.png",
+    alt: "Placeholder banner 2",
+  },
+  {
+    src: "https://images.weirdstrange.com/banners/home-banner.png",
+    alt: "Placeholder banner 3",
+  },
+];
+
 export default async function HomePage() {
   // Prefer the curated collection; fall back to the full catalog until it exists.
   const collectionProducts = await getCollectionProducts({
@@ -25,6 +42,9 @@ export default async function HomePage() {
 
   return (
     <>
+      <div className="px-8 pt-8 w-full my-4">
+        <BannerCarousel images={PLACEHOLDER_BANNER_IMAGES} />
+      </div>
       <div className="px-8 w-full">
         <Grid className="items-stretch md:grid-cols-4">
           <li className="min-w-0 md:col-span-3">
@@ -37,7 +57,7 @@ export default async function HomePage() {
           {carouselProducts[0] ? (
             <ProductCards
               product={carouselProducts[0]}
-              className="border border-ws-charcoal md:col-span-1"
+              className="border border-ws-border md:col-span-1"
             />
           ) : null}
         </Grid>

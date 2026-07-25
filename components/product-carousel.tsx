@@ -31,7 +31,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
   if (!products.length) return null;
 
   const buttonClasses =
-    "flex h-11 w-11 items-center justify-center border border-ws-charcoal text-ws-charcoal transition-opacity disabled:opacity-30";
+    "flex h-11 w-11 items-center justify-center border border-ws-border text-ws-charcoal transition-opacity disabled:opacity-30";
 
   return (
     <div className="relative w-full my-4">

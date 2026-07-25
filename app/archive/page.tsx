@@ -12,7 +12,7 @@ export default function ArchivePage() {
     <>
       <section className="mx-auto max-w-(--breakpoint-2xl) px-4 py-12">
         <h1 className="text-3xl font-bold text-ws-charcoal">Archive</h1>
-        <p className="mt-2 max-w-prose text-neutral-500">
+        <p className="mt-2 max-w-prose text-ws-text-muted">
           A running record of the artists and publications behind the work.
         </p>
 
@@ -22,7 +22,7 @@ export default function ArchivePage() {
             className="block rounded-lg border border-neutral-200 p-6 hover:border-blue-600 dark:border-neutral-800"
           >
             <h2 className="text-xl font-semibold text-ws-charcoal">Artists</h2>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-ws-text-muted">
               Browse every artist in the archive.
             </p>
           </Link>
@@ -33,7 +33,7 @@ export default function ArchivePage() {
             <h2 className="text-xl font-semibold text-ws-charcoal">
               Publications
             </h2>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-ws-text-muted">
               Browse every publication in the archive.
             </p>
           </Link>

@@ -27,7 +27,7 @@ export default function Search() {
         defaultValue={searchParams?.get("q") || ""}
         onFocus={() => setIsOpen(true)}
         onBlur={() => setIsOpen(false)}
-        className={`text-md h-full w-full rounded-lg border bg-white pl-4 pr-10 text-ws-charcoal placeholder:text-neutral-500 transition-opacity duration-200 ease-in-out focus:outline-none! focus:ring-0! focus-visible:outline-hidden! focus-visible:ring-0! focus-visible:ring-offset-0! md:text-sm dark:border-neutral-800 dark:bg-transparent dark:placeholder:text-neutral-400 ${
+        className={`text-md h-full w-full rounded-lg border bg-white pl-4 pr-10 text-ws-charcoal placeholder:text-ws-text-muted transition-opacity duration-200 ease-in-out focus:outline-none! focus:ring-0! focus-visible:outline-hidden! focus-visible:ring-0! focus-visible:ring-offset-0! md:text-sm dark:border-neutral-800 dark:bg-transparent dark:placeholder:text-neutral-400 ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       />

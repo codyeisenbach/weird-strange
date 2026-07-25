@@ -55,7 +55,7 @@ export default async function AccountPage() {
       ) : null}
       <a
         href="/api/auth/logout"
-        className="inline-block border border-ws-charcoal px-4 py-2 text-sm hover:opacity-70"
+        className="inline-block border border-ws-border px-4 py-2 text-sm hover:opacity-70"
       >
         Log out
       </a>

@@ -17,7 +17,7 @@ export default async function ArtistsPage() {
         <h1 className="text-3xl font-bold text-ws-charcoal">Artists</h1>
 
         {artists.length === 0 ? (
-          <p className="mt-6 text-lg text-neutral-500">
+          <p className="mt-6 text-lg text-ws-text-muted">
             No artists found in the archive.
           </p>
         ) : (

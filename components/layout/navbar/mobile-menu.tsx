@@ -64,7 +64,7 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
             <Dialog.Panel className="fixed bottom-0 left-0 right-0 top-0 flex h-full w-full flex-col bg-ws-cream pb-6 text-ws-charcoal">
               <div className="p-4">
                 <button
-                  className="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-ws-charcoal/20 text-ws-charcoal transition-colors"
+                  className="mb-4 flex h-11 w-11 items-center justify-center rounded-md border border-ws-border/20 text-ws-charcoal transition-colors"
                   onClick={closeMobileMenu}
                   aria-label="Close mobile menu"
                 >

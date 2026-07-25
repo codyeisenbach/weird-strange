@@ -6,6 +6,12 @@
 @theme {
   --color-ws-cream: #f4f1ea;
   --color-ws-charcoal: #333333;
+  --color-ws-red: #dc2626;
+
+  /* Extended UI States */
+  --color-ws-border: #333333;          /* Stark 1px-2px borders */
+  --color-ws-text-muted: #666666;     /* Metadata / catalog numbers */
+  --color-ws-red-hover: #b91c1c;      /* Darker red for button hover states */
 }
 
 @layer base {

@@ -9,7 +9,11 @@ const MESSAGES = [
 ];
 
 const ROTATE_INTERVAL_MS = 5_000;
+// Hysteresis band: reveal once scrolled back above REVEAL_THRESHOLD_PX,
+// hide once scrolled past HIDE_THRESHOLD_PX. A single shared threshold
+// caused the banner to flicker when scrollY hovered right at the line.
 const REVEAL_THRESHOLD_PX = 80;
+const HIDE_THRESHOLD_PX = 120;
 const SLIDE_DURATION_MS = 300;
 
 export function SaleBanner() {
@@ -40,13 +44,28 @@ export function SaleBanner() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setVisible(window.scrollY <= REVEAL_THRESHOLD_PX);
+    let rafId: number | null = null;
+
+    const updateVisibility = () => {
+      rafId = null;
+      setVisible((prev) => {
+        if (window.scrollY <= REVEAL_THRESHOLD_PX) return true;
+        if (window.scrollY >= HIDE_THRESHOLD_PX) return false;
+        return prev;
+      });
     };
 
-    handleScroll();
+    const handleScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(updateVisibility);
+    };
+
+    updateVisibility();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const isSliding = previousMessageIndex !== null;

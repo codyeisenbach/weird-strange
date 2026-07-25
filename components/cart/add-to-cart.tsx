@@ -16,7 +16,7 @@ function SubmitButton({
   selectedVariantId: string | undefined;
 }) {
   const buttonClasses =
-    "relative flex w-full items-center justify-center rounded-full bg-ws-charcoal p-4 tracking-wide text-ws-cream";
+    "relative flex w-full items-center justify-center bg-ws-charcoal p-4 tracking-wide text-ws-cream";
   const disabledClasses = "cursor-not-allowed opacity-60 hover:opacity-60";
 
   if (!availableForSale) {
@@ -34,7 +34,7 @@ function SubmitButton({
         disabled
         className={clsx(buttonClasses, disabledClasses)}
       >
-        <div className="absolute left-0 ml-4">
+        <div className="absolute left-0 ml-5">
           <PlusIcon className="h-5" />
         </div>
         Add To Cart
@@ -49,7 +49,7 @@ function SubmitButton({
         "hover:opacity-90": true,
       })}
     >
-      <div className="absolute left-0 ml-4">
+      <div className="absolute left-0 ml-5">
         <PlusIcon className="h-5" />
       </div>
       Add To Cart
