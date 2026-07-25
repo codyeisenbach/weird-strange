@@ -23,11 +23,11 @@ export async function Navbar() {
         </Suspense>
       </div>
       <div className="flex w-full items-center justify-between max-w-[1280px] px-4 md:px-8">
-        <div className="flex w-full md:w-fit">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:static md:left-auto md:top-auto md:w-fit md:translate-x-0 md:translate-y-0">
           <Link
             href="/"
             prefetch={true}
-            className="flex w-full items-center justify-center md:w-auto"
+            className="flex items-center justify-center md:w-auto"
           >
             {logoUrl ? (
               <Image
@@ -35,7 +35,7 @@ export async function Navbar() {
                 alt="Logo"
                 width={120}
                 height={32}
-                className="h-8 w-auto object-contain mr-8"
+                className="h-8 w-auto object-contain md:mr-8"
                 priority
               />
             ) : null}
@@ -58,7 +58,7 @@ export async function Navbar() {
             </ul>
           ) : null}
         </div>
-        <div className="flex items-center justify-end md:w-fit">
+        <div className="ml-auto flex items-center justify-end md:ml-0 md:w-fit">
           <div className="hidden justify-center md:flex">
             <Suspense fallback={<SearchSkeleton />}>
               <Search />
