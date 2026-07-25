@@ -80,7 +80,7 @@ export default async function ProductPage(props: {
           __html: JSON.stringify(productJsonLd),
         }}
       />
-      <div className="mx-auto max-w-(--breakpoint-2xl) px-4">
+      <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-4">
         <div className="flex flex-col bg-ws-cream p-8 text-ws-charcoal md:p-12 lg:flex-row lg:gap-8">
           <div className="h-full w-full basis-full lg:basis-4/6">
             <Suspense

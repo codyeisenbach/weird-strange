@@ -26,8 +26,8 @@ export default async function HomePage() {
   return (
     <>
       <div className="px-8 w-full">
-        <Grid className="grid-cols-4 items-stretch">
-          <li className="col-span-3 min-w-0">
+        <Grid className="items-stretch md:grid-cols-4">
+          <li className="min-w-0 md:col-span-3">
             <ImageBanner
               src="https://images.weirdstrange.com/banners/home-banner.png"
               href="/search"
@@ -37,7 +37,7 @@ export default async function HomePage() {
           {carouselProducts[0] ? (
             <ProductCards
               product={carouselProducts[0]}
-              className="col-span-1 border border-ws-charcoal"
+              className="border border-ws-charcoal md:col-span-1"
             />
           ) : null}
         </Grid>
