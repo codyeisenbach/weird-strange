@@ -109,7 +109,7 @@ export function BannerCarousel({
         </button>
       </div>
 
-      <div className="mt-3 h-1.5 w-full rounded-full bg-gray-200">
+      <div className="mt-3 h-2.5 w-full rounded-full bg-gray-200">
         <div
           className="h-full rounded-full bg-ws-charcoal"
           style={{ width: `${scrollProgress}%` }}

@@ -49,7 +49,11 @@ export default function CartModal() {
 
   return (
     <>
-      <button aria-label="Open cart" onClick={openCart}>
+      <button
+        aria-label="Open cart"
+        onClick={openCart}
+        className="cursor-pointer"
+      >
         <OpenCart quantity={cart?.totalQuantity} />
       </button>
       <Transition show={isOpen}>

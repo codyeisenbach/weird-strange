@@ -38,7 +38,7 @@ export default function Search() {
           setIsOpen(true);
           inputRef.current?.focus();
         }}
-        className="absolute right-0 top-0 flex h-11 w-11 shrink-0 items-center justify-center text-ws-charcoal"
+        className="absolute right-0 top-0 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center text-ws-charcoal"
       >
         <MagnifyingGlassIcon className="h-5 w-5 transition-transform ease-in-out active:scale-125" />
       </button>
