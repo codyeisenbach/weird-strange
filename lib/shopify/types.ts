@@ -88,6 +88,7 @@ export type ProductVariant = {
     value: string;
   }[];
   price: Money;
+  compareAtPrice: Money | null;
 };
 
 export type SEO = {
@@ -126,6 +127,10 @@ export type ShopifyProduct = {
   priceRange: {
     maxVariantPrice: Money;
     minVariantPrice: Money;
+  };
+  compareAtPriceRange: {
+    maxVariantPrice: Money | null;
+    minVariantPrice: Money | null;
   };
   variants: Connection<ProductVariant>;
   featuredImage: Image;

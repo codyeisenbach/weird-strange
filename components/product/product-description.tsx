@@ -5,15 +5,29 @@ import { Product } from "lib/shopify/types";
 import { VariantSelector } from "./variant-selector";
 
 export function ProductDescription({ product }: { product: Product }) {
+  const price = product.priceRange.maxVariantPrice;
+  const compareAtPrice = product.compareAtPriceRange?.maxVariantPrice;
+  const hasDiscount =
+    compareAtPrice && parseFloat(compareAtPrice.amount) > parseFloat(price.amount);
+
   return (
     <>
       <div className="mb-6 flex flex-col border-b border-ws-border/20 pb-6">
         <h1 className="mb-6 text-5xl font-medium">{product.title}</h1>
-        <Price
-          className="text-4xl font-light text-ws-charcoal"
-          amount={product.priceRange.maxVariantPrice.amount}
-          currencyCode={product.priceRange.maxVariantPrice.currencyCode}
-        />
+        <div className="inline-flex w-fit items-center gap-3 bg-ws-charcoal px-4 py-2">
+          {hasDiscount ? (
+            <Price
+              className="text-3xl font-light text-red-600 line-through"
+              amount={compareAtPrice.amount}
+              currencyCode={compareAtPrice.currencyCode}
+            />
+          ) : null}
+          <Price
+            className="text-4xl font-light text-white"
+            amount={price.amount}
+            currencyCode={price.currencyCode}
+          />
+        </div>
       </div>
       <VariantSelector options={product.options} variants={product.variants} />
       {product.descriptionHtml ? (
