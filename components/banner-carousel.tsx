@@ -94,7 +94,7 @@ export function BannerCarousel({
           aria-label="Previous slide"
           onClick={() => emblaApi?.scrollPrev()}
           disabled={!canScrollPrev}
-          className="absolute left-[calc(8%-50px)] top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-opacity disabled:pointer-events-none disabled:opacity-0"
+          className="absolute left-[calc(8%-50px)] top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-opacity disabled:pointer-events-none disabled:opacity-0"
         >
           <ChevronLeftIcon className="h-9 w-9 transition-transform ease-in-out active:scale-125" />
         </button>
@@ -103,7 +103,7 @@ export function BannerCarousel({
           aria-label="Next slide"
           onClick={() => emblaApi?.scrollNext()}
           disabled={!canScrollNext}
-          className="absolute right-[calc(8%-50px)] top-1/2 z-10 translate-x-1/2 -translate-y-1/2 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-opacity disabled:pointer-events-none disabled:opacity-0"
+          className="absolute right-[calc(8%-50px)] top-1/2 z-10 translate-x-1/2 -translate-y-1/2 cursor-pointer text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-opacity disabled:pointer-events-none disabled:opacity-0"
         >
           <ChevronRightIcon className="h-9 w-9 transition-transform ease-in-out active:scale-125" />
         </button>
