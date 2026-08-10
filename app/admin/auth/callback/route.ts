@@ -6,12 +6,23 @@ import { NextRequest, NextResponse } from "next/server";
 // code (code) for a session, per
 // https://supabase.com/docs/guides/auth/server-side/email-based-auth-with-pkce-flow-for-ssr
 // https://supabase.com/docs/guides/auth/social-login/auth-google#step-3-add-login-code-to-your-client
+// Only a same-origin, absolute-path redirect target is allowed. `next` is
+// attacker-controlled (it's a query param on a publicly reachable URL), so
+// this guards against it being used as an open redirect — e.g.
+// ?next=https://evil.example immediately after a real sign-in.
+function safeNextPath(next: string | null): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return "/admin";
+  }
+  return next;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/admin";
+  const next = safeNextPath(searchParams.get("next"));
 
   const supabase = await getSupabaseAuthServerClient();
 

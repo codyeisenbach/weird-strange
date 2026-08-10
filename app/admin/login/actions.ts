@@ -32,7 +32,9 @@ export async function sendMagicLink(
     email,
     options: {
       emailRedirectTo: `${siteUrl.replace(/\/$/, "")}/admin/auth/callback?next=/admin`,
-      shouldCreateUser: true,
+      // Signup is disabled project-wide (see supabase/config.toml); only
+      // existing admin accounts can sign in via magic link.
+      shouldCreateUser: false,
     },
   });
 
