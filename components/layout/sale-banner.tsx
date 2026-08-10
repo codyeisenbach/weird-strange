@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const MESSAGES = [
@@ -17,6 +18,9 @@ const HIDE_THRESHOLD_PX = 120;
 const SLIDE_DURATION_MS = 300;
 
 export function SaleBanner() {
+  const pathname = usePathname();
+  const hidden = pathname.startsWith("/archive");
+
   const [messageIndex, setMessageIndex] = useState(0);
   const [previousMessageIndex, setPreviousMessageIndex] = useState<
     number | null
@@ -27,6 +31,8 @@ export function SaleBanner() {
   const cleanupTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
+    if (hidden) return;
+
     const interval = setInterval(() => {
       setPreviousMessageIndex(messageIndexRef.current);
       setMessageIndex((current) => (current + 1) % MESSAGES.length);
@@ -41,9 +47,11 @@ export function SaleBanner() {
       clearInterval(interval);
       clearTimeout(cleanupTimeout.current);
     };
-  }, []);
+  }, [hidden]);
 
   useEffect(() => {
+    if (hidden) return;
+
     let rafId: number | null = null;
 
     const updateVisibility = () => {
@@ -66,7 +74,9 @@ export function SaleBanner() {
       window.removeEventListener("scroll", handleScroll);
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [hidden]);
+
+  if (hidden) return null;
 
   const isSliding = previousMessageIndex !== null;
 
@@ -79,9 +89,7 @@ export function SaleBanner() {
       <div className="min-h-0">
         <div className="relative flex w-full items-center justify-center overflow-hidden px-4 py-2">
           {isSliding && (
-            <p
-              className="pointer-events-none absolute font-sans text-sm font-medium tracking-wide text-red-600 [animation:slide-out-left_300ms_ease-in-out_forwards]"
-            >
+            <p className="pointer-events-none absolute font-sans text-sm font-medium tracking-wide text-red-600 [animation:slide-out-left_300ms_ease-in-out_forwards]">
               {MESSAGES[previousMessageIndex]}
             </p>
           )}
