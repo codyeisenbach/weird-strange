@@ -88,22 +88,36 @@ export function Gallery({
     };
   }, [slide]);
 
-  const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) => {
+  const pointToZoomOrigin = (event: {
+    clientX: number;
+    clientY: number;
+  }) => {
     const container = imageContainerRef.current;
-    if (!container) return;
+    if (!container) return null;
 
+    const rect = container.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    return {
+      x: Math.min(100, Math.max(0, x)),
+      y: Math.min(100, Math.max(0, y)),
+    };
+  };
+
+  const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (zoom) {
       setZoom(null);
       return;
     }
 
-    const rect = container.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-    setZoom({
-      x: Math.min(100, Math.max(0, x)),
-      y: Math.min(100, Math.max(0, y)),
-    });
+    const origin = pointToZoomOrigin(event);
+    if (origin) setZoom(origin);
+  };
+
+  const handleImageMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!zoom) return;
+    const origin = pointToZoomOrigin(event);
+    if (origin) setZoom(origin);
   };
 
   useEffect(() => {
@@ -144,6 +158,7 @@ export function Gallery({
           <div
             ref={imageContainerRef}
             onClick={handleImageClick}
+            onMouseMove={handleImageMouseMove}
             className={`relative aspect-square h-full max-h-[550px] w-full overflow-hidden ${
               zoom ? "cursor-zoom-out" : "cursor-zoom-in"
             }`}
@@ -196,14 +211,16 @@ export function Gallery({
                 }
               >
                 <Image
-                  className="h-full w-full object-contain transition-transform duration-300 ease-out"
+                  className="h-full w-full object-contain"
                   style={
                     zoom
                       ? {
                           transform: "scale(2.5)",
                           transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                          transition:
+                            "transform 300ms ease-out, transform-origin 60ms linear",
                         }
-                      : undefined
+                      : { transition: "transform 300ms ease-out" }
                   }
                   fill
                   sizes="(min-width: 1024px) 66vw, 100vw"
