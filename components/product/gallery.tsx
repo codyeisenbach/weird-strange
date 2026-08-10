@@ -63,39 +63,13 @@ export function Gallery({
     imageIndex === 0 ? images.length - 1 : imageIndex - 1;
 
   const buttonClassName =
-    "flex items-center justify-center p-2 text-ws-charcoal transition-transform ease-in-out active:scale-125";
+    "flex items-center justify-center p-2 text-ws-charcoal transition-transform ease-in-out active:scale-125 cursor-pointer";
 
   return (
     <form>
       <div className="flex w-full flex-col justify-center items-center h-fit">
-        <div
-          ref={imageContainerRef}
-          onClick={handleImageClick}
-          className={`relative aspect-square h-full max-h-[550px] max-w-[550px] w-full overflow-hidden ${
-            zoom ? "cursor-zoom-out" : "cursor-zoom-in"
-          }`}
-        >
-          {images[imageIndex] && (
-            <Image
-              className="h-full w-full object-contain transition-transform duration-300 ease-out"
-              style={
-                zoom
-                  ? {
-                      transform: "scale(2.5)",
-                      transformOrigin: `${zoom.x}% ${zoom.y}%`,
-                    }
-                  : undefined
-              }
-              fill
-              sizes="(min-width: 1024px) 66vw, 100vw"
-              alt={images[imageIndex]?.altText as string}
-              src={images[imageIndex]?.src as string}
-              priority={true}
-            />
-          )}
-        </div>
-        {images.length > 1 ? (
-          <div className="flex w-full mx-5 items-center justify-between gap-2 max-w-[550px]">
+        <div className="flex w-full max-w-[550px] items-center gap-6">
+          {images.length > 1 ? (
             <button
               formAction={() => updateImage(previousImageIndex.toString())}
               aria-label="Previous product image"
@@ -103,36 +77,36 @@ export function Gallery({
             >
               <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
             </button>
+          ) : null}
 
-            <div
-              ref={emblaRef}
-              className="my-12 min-w-0 flex-1 overflow-hidden"
-            >
-              <ul className="flex items-center justify-center gap-2 py-1">
-                {images.map((image, index) => {
-                  const isActive = index === imageIndex;
+          <div
+            ref={imageContainerRef}
+            onClick={handleImageClick}
+            className={`relative aspect-square h-full max-h-[550px] w-full overflow-hidden ${
+              zoom ? "cursor-zoom-out" : "cursor-zoom-in"
+            }`}
+          >
+            {images[imageIndex] && (
+              <Image
+                className="h-full w-full object-contain transition-transform duration-300 ease-out"
+                style={
+                  zoom
+                    ? {
+                        transform: "scale(2.5)",
+                        transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                      }
+                    : undefined
+                }
+                fill
+                sizes="(min-width: 1024px) 66vw, 100vw"
+                alt={images[imageIndex]?.altText as string}
+                src={images[imageIndex]?.src as string}
+                priority={true}
+              />
+            )}
+          </div>
 
-                  return (
-                    <li key={image.src} className="h-20 w-20 flex-none">
-                      <button
-                        formAction={() => updateImage(index.toString())}
-                        aria-label="Select product image"
-                        className="h-full w-full"
-                      >
-                        <GridTileImage
-                          alt={image.altText}
-                          src={image.src}
-                          width={80}
-                          height={80}
-                          active={isActive}
-                        />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-
+          {images.length > 1 ? (
             <button
               formAction={() => updateImage(nextImageIndex.toString())}
               aria-label="Next product image"
@@ -140,6 +114,36 @@ export function Gallery({
             >
               <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
             </button>
+          ) : null}
+        </div>
+        {images.length > 1 ? (
+          <div
+            ref={emblaRef}
+            className="my-12 w-full max-w-[550px] overflow-hidden"
+          >
+            <ul className="flex items-center justify-center gap-2 py-1">
+              {images.map((image, index) => {
+                const isActive = index === imageIndex;
+
+                return (
+                  <li key={image.src} className="h-20 w-20 flex-none">
+                    <button
+                      formAction={() => updateImage(index.toString())}
+                      aria-label="Select product image"
+                      className="h-full w-full"
+                    >
+                      <GridTileImage
+                        alt={image.altText}
+                        src={image.src}
+                        width={80}
+                        height={80}
+                        active={isActive}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         ) : null}
       </div>
