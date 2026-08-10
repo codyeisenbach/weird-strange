@@ -1,7 +1,13 @@
 "use server";
 
 import { requireAdmin } from "lib/admin/auth";
-import { updateArtist, updatePublication } from "lib/archive";
+import {
+  createArtist,
+  createPublication,
+  updateArtist,
+  updatePublication,
+} from "lib/archive";
+import { redirect } from "next/navigation";
 
 export type EditFormState = { error?: string };
 
@@ -40,4 +46,46 @@ export async function savePublicationEdit(
   }
 
   return updatePublication(id, { title, description });
+}
+
+export async function createArtistEntry(
+  _prevState: EditFormState,
+  formData: FormData,
+): Promise<EditFormState> {
+  await requireAdmin();
+
+  const name = String(formData.get("name") ?? "").trim();
+  const bio = String(formData.get("bio") ?? "").trim();
+
+  if (!name) {
+    return { error: "Name is required." };
+  }
+
+  const { slug, error } = await createArtist(name, bio);
+  if (error || !slug) {
+    return { error: error ?? "Failed to create entry." };
+  }
+
+  redirect(`/archive/artists/${slug}`);
+}
+
+export async function createPublicationEntry(
+  _prevState: EditFormState,
+  formData: FormData,
+): Promise<EditFormState> {
+  await requireAdmin();
+
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!title) {
+    return { error: "Title is required." };
+  }
+
+  const { slug, error } = await createPublication(title, description);
+  if (error || !slug) {
+    return { error: error ?? "Failed to create entry." };
+  }
+
+  redirect(`/archive/publications/${slug}`);
 }

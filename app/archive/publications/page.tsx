@@ -1,5 +1,8 @@
+import { createPublicationEntry } from "app/archive/actions";
 import { ArchiveTile } from "components/archive/tile";
+import { NewEntryForm } from "components/archive/new-entry-form";
 import Footer from "components/layout/footer";
+import { getAdminUser } from "lib/admin/auth";
 import { getPublications } from "lib/archive";
 import type { Metadata } from "next";
 
@@ -9,12 +12,28 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicationsPage() {
-  const publications = await getPublications();
+  const [publications, admin] = await Promise.all([
+    getPublications(),
+    getAdminUser(),
+  ]);
 
   return (
     <>
       <section className="mx-auto max-w-(--breakpoint-2xl) px-4 py-12">
         <h1 className="text-3xl font-bold text-ws-charcoal">Publications</h1>
+
+        {admin ? (
+          <div className="mt-6">
+            <NewEntryForm
+              label="New publication"
+              titleFieldName="title"
+              titleLabel="Title"
+              bodyFieldName="description"
+              bodyLabel="Description"
+              action={createPublicationEntry}
+            />
+          </div>
+        ) : null}
 
         {publications.length === 0 ? (
           <p className="mt-6 text-lg text-ws-text-muted">

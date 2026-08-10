@@ -326,3 +326,83 @@ export async function updatePublication(
   updateTag(ARCHIVE_TAGS.publications);
   return {};
 }
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const POSTGRES_UNIQUE_VIOLATION = "23505";
+const MAX_SLUG_ATTEMPTS = 20;
+
+// Inserts a row, retrying with a numeric-suffixed slug (name-2, name-3, …)
+// on a unique-constraint collision. The DB's unique index on `slug` is the
+// actual source of truth for uniqueness — this just makes collisions
+// self-resolving instead of a dead end for the admin filling out the form.
+async function insertWithUniqueSlug<T extends { slug: string }>(
+  table: "artists" | "publications",
+  baseSlug: string,
+  buildRow: (slug: string) => Record<string, unknown>,
+): Promise<{ row?: T; error?: string }> {
+  const supabase = getSupabaseServerClient();
+
+  for (let attempt = 1; attempt <= MAX_SLUG_ATTEMPTS; attempt++) {
+    const slug = attempt === 1 ? baseSlug : `${baseSlug}-${attempt}`;
+    const { data, error } = await supabase
+      .from(table)
+      .insert(buildRow(slug))
+      .select()
+      .single();
+
+    if (!error) return { row: data as T };
+    if (error.code !== POSTGRES_UNIQUE_VIOLATION) {
+      console.error(`Failed to create ${table} row:`, error.message);
+      return { error: "Failed to create entry." };
+    }
+    // Unique violation on slug — loop and try the next suffix.
+  }
+
+  return { error: "Could not generate a unique URL for this entry." };
+}
+
+export async function createArtist(
+  name: string,
+  bio: string,
+): Promise<{ slug?: string; error?: string }> {
+  const baseSlug = slugify(name);
+  if (!baseSlug) return { error: "Name must contain at least one letter." };
+
+  const { row, error } = await insertWithUniqueSlug<{ slug: string }>(
+    "artists",
+    baseSlug,
+    (slug) => ({ slug, name, bio: bio || null }),
+  );
+
+  if (error || !row) return { error };
+
+  updateTag(ARCHIVE_TAGS.artists);
+  return { slug: row.slug };
+}
+
+export async function createPublication(
+  title: string,
+  description: string,
+): Promise<{ slug?: string; error?: string }> {
+  const baseSlug = slugify(title);
+  if (!baseSlug) return { error: "Title must contain at least one letter." };
+
+  const { row, error } = await insertWithUniqueSlug<{ slug: string }>(
+    "publications",
+    baseSlug,
+    (slug) => ({ slug, title, description: description || null }),
+  );
+
+  if (error || !row) return { error };
+
+  updateTag(ARCHIVE_TAGS.publications);
+  return { slug: row.slug };
+}

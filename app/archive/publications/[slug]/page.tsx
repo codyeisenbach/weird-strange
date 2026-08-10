@@ -15,7 +15,6 @@ import type { PublicationDetail } from "lib/archive/types";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
@@ -115,21 +114,12 @@ export default async function PublicationPage(props: {
 
   if (!publication) return notFound();
 
-  const article = (title: ReactNode, body: ReactNode) => (
-    <WikiArticle
-      title={title}
-      subtitle="From the Weird Strange Archive"
-      body={body}
-      infobox={<PublicationInfobox publication={publication} />}
-    >
-      <PublicationProducts publication={publication} />
-    </WikiArticle>
-  );
-
   return (
     <>
       {admin ? (
         <WikiEditable
+          subtitle="From the Weird Strange Archive"
+          infobox={<PublicationInfobox publication={publication} />}
           titleFieldName="title"
           titleLabel="Title"
           bodyFieldName="description"
@@ -138,13 +128,17 @@ export default async function PublicationPage(props: {
           initialBody={publication.description ?? ""}
           action={savePublicationEdit.bind(null, publication.id)}
         >
-          {(render) => article(render.title, render.body)}
+          <PublicationProducts publication={publication} />
         </WikiEditable>
       ) : (
-        article(
-          publication.title,
-          <ArticleBody text={publication.description} />,
-        )
+        <WikiArticle
+          title={publication.title}
+          subtitle="From the Weird Strange Archive"
+          body={<ArticleBody text={publication.description} />}
+          infobox={<PublicationInfobox publication={publication} />}
+        >
+          <PublicationProducts publication={publication} />
+        </WikiArticle>
       )}
       <Footer />
     </>

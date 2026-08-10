@@ -1,5 +1,8 @@
+import { createArtistEntry } from "app/archive/actions";
 import { ArchiveTile } from "components/archive/tile";
+import { NewEntryForm } from "components/archive/new-entry-form";
 import Footer from "components/layout/footer";
+import { getAdminUser } from "lib/admin/auth";
 import { getArtists } from "lib/archive";
 import type { Metadata } from "next";
 
@@ -9,12 +12,25 @@ export const metadata: Metadata = {
 };
 
 export default async function ArtistsPage() {
-  const artists = await getArtists();
+  const [artists, admin] = await Promise.all([getArtists(), getAdminUser()]);
 
   return (
     <>
       <section className="mx-auto max-w-(--breakpoint-2xl) px-4 py-12">
         <h1 className="text-3xl font-bold text-ws-charcoal">Artists</h1>
+
+        {admin ? (
+          <div className="mt-6">
+            <NewEntryForm
+              label="New artist"
+              titleFieldName="name"
+              titleLabel="Name"
+              bodyFieldName="bio"
+              bodyLabel="Bio"
+              action={createArtistEntry}
+            />
+          </div>
+        ) : null}
 
         {artists.length === 0 ? (
           <p className="mt-6 text-lg text-ws-text-muted">

@@ -15,7 +15,6 @@ import type { ArtistDetail } from "lib/archive/types";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
@@ -108,21 +107,12 @@ export default async function ArtistPage(props: {
 
   if (!artist) return notFound();
 
-  const article = (title: ReactNode, body: ReactNode) => (
-    <WikiArticle
-      title={title}
-      subtitle="From the Weird Strange Archive"
-      body={body}
-      infobox={<ArtistInfobox artist={artist} />}
-    >
-      <ArtistProducts artist={artist} />
-    </WikiArticle>
-  );
-
   return (
     <>
       {admin ? (
         <WikiEditable
+          subtitle="From the Weird Strange Archive"
+          infobox={<ArtistInfobox artist={artist} />}
           titleFieldName="name"
           titleLabel="Name"
           bodyFieldName="bio"
@@ -131,10 +121,17 @@ export default async function ArtistPage(props: {
           initialBody={artist.bio ?? ""}
           action={saveArtistEdit.bind(null, artist.id)}
         >
-          {(render) => article(render.title, render.body)}
+          <ArtistProducts artist={artist} />
         </WikiEditable>
       ) : (
-        article(artist.name, <ArticleBody text={artist.bio} />)
+        <WikiArticle
+          title={artist.name}
+          subtitle="From the Weird Strange Archive"
+          body={<ArticleBody text={artist.bio} />}
+          infobox={<ArtistInfobox artist={artist} />}
+        >
+          <ArtistProducts artist={artist} />
+        </WikiArticle>
       )}
       <Footer />
     </>
