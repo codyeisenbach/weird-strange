@@ -222,7 +222,15 @@ const reshapeProduct = (
     ...rest,
     options: reshapeOptions(options),
     images: reshapeImages(images, product.title),
-    variants: removeEdgesAndNodes(variants),
+    variants: removeEdgesAndNodes(variants).map((variant) => ({
+      ...variant,
+      image: variant.image
+        ? {
+            ...variant.image,
+            altText: variant.image.altText || product.title,
+          }
+        : null,
+    })),
   };
 };
 

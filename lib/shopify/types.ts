@@ -89,6 +89,7 @@ export type ProductVariant = {
   }[];
   price: Money;
   compareAtPrice: Money | null;
+  image: Image | null;
 };
 
 export type SEO = {

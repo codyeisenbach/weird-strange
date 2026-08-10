@@ -1,6 +1,10 @@
 import clsx from "clsx";
 import Price from "components/price";
 import { Product } from "lib/shopify/types";
+import {
+  getColorFromAltText,
+  getVariantSearchParams,
+} from "lib/shopify/variant-matching";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -22,15 +26,8 @@ function ProductCards({
 }: {
   product: Product;
 } & React.ComponentProps<"li">) {
-  const firstAvailableVariant = product.variants.find(
-    (variant) => variant.availableForSale,
-  );
-  const variantParams = new URLSearchParams(
-    firstAvailableVariant?.selectedOptions.map(({ name, value }) => [
-      name.toLowerCase(),
-      value,
-    ]),
-  ).toString();
+  const color = getColorFromAltText(product, product.featuredImage?.altText);
+  const variantParams = getVariantSearchParams(product, color);
   const href = variantParams
     ? `/product/${product.handle}?${variantParams}`
     : `/product/${product.handle}`;
@@ -42,7 +39,7 @@ function ProductCards({
           {product.featuredImage?.url ? (
             <Image
               src={product.featuredImage.url}
-              alt={product.title}
+              alt={product.featuredImage.altText || product.title}
               fill
               sizes="(min-width: 768px) 25vw, 300px"
               className="object-cover"
