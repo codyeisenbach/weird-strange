@@ -1,6 +1,7 @@
 import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
+  updateTag,
 } from "next/cache";
 
 import { getProducts } from "lib/shopify";
@@ -183,9 +184,7 @@ export async function getArtist(
   )
     .filter((row) => row.publications)
     .map((row) => ({
-      ...reshapePublication(
-        row.publications as unknown as PublicationRow,
-      ),
+      ...reshapePublication(row.publications as unknown as PublicationRow),
       sortOrder: row.sort_order,
     }));
 
@@ -273,4 +272,57 @@ export async function getPublication(
     artists,
     products,
   };
+}
+
+export type ArtistTextEdit = {
+  name: string;
+  bio: string;
+};
+
+export type PublicationTextEdit = {
+  title: string;
+  description: string;
+};
+
+// Writes go through the secret-key (service_role) client, bypassing RLS —
+// callers are responsible for authorization (see requireAdmin() in
+// lib/admin/auth.ts). RLS on these tables only grants public `select`;
+// there's no `authenticated`-role policy for admin writes because "admin"
+// here is an app-level allowlist, not a Supabase Auth role.
+export async function updateArtist(
+  id: string,
+  edit: ArtistTextEdit,
+): Promise<{ error?: string }> {
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("artists")
+    .update({ name: edit.name, bio: edit.bio || null })
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Failed to update artist '${id}':`, error.message);
+    return { error: "Failed to save changes." };
+  }
+
+  updateTag(ARCHIVE_TAGS.artists);
+  return {};
+}
+
+export async function updatePublication(
+  id: string,
+  edit: PublicationTextEdit,
+): Promise<{ error?: string }> {
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("publications")
+    .update({ title: edit.title, description: edit.description || null })
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Failed to update publication '${id}':`, error.message);
+    return { error: "Failed to save changes." };
+  }
+
+  updateTag(ARCHIVE_TAGS.publications);
+  return {};
 }

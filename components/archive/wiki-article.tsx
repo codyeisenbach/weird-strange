@@ -14,6 +14,22 @@ function paragraphsFromPlainText(text: string): string[] {
     .filter(Boolean);
 }
 
+export function ArticleBody({ text }: { text: string | null }) {
+  const paragraphs = text ? paragraphsFromPlainText(text) : [];
+
+  return paragraphs.length > 0 ? (
+    <div className="space-y-4 text-[17px] leading-7">
+      {paragraphs.map((paragraph, index) => (
+        <p key={index}>{paragraph}</p>
+      ))}
+    </div>
+  ) : (
+    <p className="font-sans text-sm text-neutral-500 italic">
+      No article text yet.
+    </p>
+  );
+}
+
 export function WikiInfobox({
   title,
   src,
@@ -32,7 +48,13 @@ export function WikiInfobox({
       </div>
       {src ? (
         <div className="relative aspect-square w-full border-b border-neutral-300 dark:border-neutral-700">
-          <Image src={src} alt={alt} fill sizes="288px" className="object-cover" />
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes="288px"
+            className="object-cover"
+          />
         </div>
       ) : null}
       {facts.length > 0 ? (
@@ -63,14 +85,12 @@ export function WikiArticle({
   body,
   children,
 }: {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   infobox: ReactNode;
-  body: string | null;
+  body: ReactNode;
   children?: ReactNode;
 }) {
-  const paragraphs = body ? paragraphsFromPlainText(body) : [];
-
   return (
     <article className="mx-auto max-w-(--breakpoint-lg) px-4 py-12 font-serif text-ws-charcoal">
       <h1 className="text-4xl leading-tight font-normal">{title}</h1>
@@ -81,17 +101,7 @@ export function WikiArticle({
 
       {infobox}
 
-      {paragraphs.length > 0 ? (
-        <div className="space-y-4 text-[17px] leading-7">
-          {paragraphs.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
-        </div>
-      ) : (
-        <p className="font-sans text-sm text-neutral-500 italic">
-          No article text yet.
-        </p>
-      )}
+      {body}
 
       <div className="clear-both font-sans">{children}</div>
     </article>
@@ -123,7 +133,10 @@ export function WikiLink({
   children: ReactNode;
 }) {
   return (
-    <Link href={href} className="text-blue-700 hover:underline dark:text-blue-400">
+    <Link
+      href={href}
+      className="text-blue-700 hover:underline dark:text-blue-400"
+    >
       {children}
     </Link>
   );
