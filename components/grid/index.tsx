@@ -3,6 +3,7 @@ import Price from "components/price";
 import { Product } from "lib/shopify/types";
 import {
   getColorFromAltText,
+  getHoverImage,
   getVariantSearchParams,
 } from "lib/shopify/variant-matching";
 import Image from "next/image";
@@ -31,11 +32,12 @@ function ProductCards({
   const href = variantParams
     ? `/product/${product.handle}?${variantParams}`
     : `/product/${product.handle}`;
+  const hoverImage = getHoverImage(product, color);
 
   return (
     <li {...props} className={clsx("transition-opacity", className)}>
       <Link href={href} prefetch={true} className="block">
-        <div className="relative aspect-[300/368] w-full overflow-hidden">
+        <div className="group relative aspect-[300/368] w-full overflow-hidden">
           {product.featuredImage?.url ? (
             <Image
               src={product.featuredImage.url}
@@ -45,26 +47,33 @@ function ProductCards({
               className="object-cover"
             />
           ) : null}
-        </div>
-        <div className="mt-2 flex w-full flex-col gap-1 pb-2 px-2">
-          <div className="flex w-full justify-between">
-            <h3 className="text-sm font-medium text-ws-charcoal">
-              {product.title}
-            </h3>
-            <Price
-              amount={product.priceRange.maxVariantPrice.amount}
-              currencyCode={product.priceRange.maxVariantPrice.currencyCode}
-              className="text-sm text-ws-charcoal"
-            />
-          </div>
-          {product.descriptionHtml ? (
-            <div
-              className="prose-sm max-w-none text-xs text-neutral-500 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0"
-              dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+          {hoverImage ? (
+            <Image
+              src={hoverImage.url}
+              alt={hoverImage.altText || product.title}
+              fill
+              sizes="(min-width: 768px) 25vw, 300px"
+              className="object-cover opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-hover:duration-300"
             />
           ) : null}
         </div>
+        <div className="mt-2 flex w-full gap-4 justify-between px-2">
+          <h3 className="text-sm font-medium text-ws-charcoal">
+            {product.title}
+          </h3>
+          <Price
+            amount={product.priceRange.maxVariantPrice.amount}
+            currencyCode={product.priceRange.maxVariantPrice.currencyCode}
+            className="text-sm text-ws-charcoal"
+          />
+        </div>
       </Link>
+      {product.descriptionHtml ? (
+        <div
+          className="prose-sm max-w-none px-2 py-2 text-xs text-neutral-500 prose-ul:list-disc prose-ul:pl-4 prose-ol:list-decimal prose-ol:pl-4 prose-p:m-0 prose-ul:m-0 prose-ol:m-0 prose-li:m-0"
+          dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+        />
+      ) : null}
     </li>
   );
 }
