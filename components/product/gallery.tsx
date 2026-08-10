@@ -5,7 +5,7 @@ import { GridTileImage } from "components/grid/tile";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function Gallery({
   images,
@@ -22,6 +22,31 @@ export function Gallery({
     align: "start",
     containScroll: "trimSnaps",
   });
+
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
+
+  const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const container = imageContainerRef.current;
+    if (!container) return;
+
+    if (zoom) {
+      setZoom(null);
+      return;
+    }
+
+    const rect = container.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    setZoom({
+      x: Math.min(100, Math.max(0, x)),
+      y: Math.min(100, Math.max(0, y)),
+    });
+  };
+
+  useEffect(() => {
+    setZoom(null);
+  }, [imageIndex]);
 
   const updateImage = (index: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -43,10 +68,24 @@ export function Gallery({
   return (
     <form>
       <div className="flex w-full flex-col justify-center items-center h-fit">
-        <div className="relative aspect-square h-full max-h-[550px] max-w-[550px] w-full overflow-hidden">
+        <div
+          ref={imageContainerRef}
+          onClick={handleImageClick}
+          className={`relative aspect-square h-full max-h-[550px] max-w-[550px] w-full overflow-hidden ${
+            zoom ? "cursor-zoom-out" : "cursor-zoom-in"
+          }`}
+        >
           {images[imageIndex] && (
             <Image
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain transition-transform duration-300 ease-out"
+              style={
+                zoom
+                  ? {
+                      transform: "scale(2.5)",
+                      transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                    }
+                  : undefined
+              }
               fill
               sizes="(min-width: 1024px) 66vw, 100vw"
               alt={images[imageIndex]?.altText as string}
