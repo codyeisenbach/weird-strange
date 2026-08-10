@@ -24,6 +24,7 @@ export function Gallery({
   });
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const zoomedImageRef = useRef<HTMLImageElement>(null);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
 
   const [slide, setSlide] = useState<{
@@ -117,7 +118,15 @@ export function Gallery({
   const handleImageMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     if (!zoom) return;
     const origin = pointToZoomOrigin(event);
-    if (origin) setZoom(origin);
+    const image = zoomedImageRef.current;
+    // Mutate the DOM directly instead of going through setZoom/React state:
+    // re-rendering on every mousemove (dozens of times a second) plus
+    // CSS-transitioning transform-origin fights the cursor and reads as
+    // laggy/jerky. Writing the style straight to the element tracks the
+    // cursor 1:1 with no transition and no React re-render in the loop.
+    if (origin && image) {
+      image.style.transformOrigin = `${origin.x}% ${origin.y}%`;
+    }
   };
 
   useEffect(() => {
@@ -211,14 +220,14 @@ export function Gallery({
                 }
               >
                 <Image
+                  ref={zoomedImageRef}
                   className="h-full w-full object-contain"
                   style={
                     zoom
                       ? {
                           transform: "scale(2.5)",
                           transformOrigin: `${zoom.x}% ${zoom.y}%`,
-                          transition:
-                            "transform 300ms ease-out, transform-origin 60ms linear",
+                          transition: "transform 300ms ease-out",
                         }
                       : { transition: "transform 300ms ease-out" }
                   }
