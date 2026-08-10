@@ -35,10 +35,13 @@ export function Gallery({
   const previousIndexRef = useRef(imageIndex);
   const slideTokenRef = useRef(0);
 
-  useEffect(() => {
+  // Computed synchronously during render (React's "adjusting state while
+  // rendering" pattern) rather than in a useEffect. An effect runs *after*
+  // the browser paints the render that already shows the new imageIndex, so
+  // there'd be one painted frame with the new image at full opacity and no
+  // slide wrapper yet — a visible flash before the animation kicks in.
+  if (previousIndexRef.current !== imageIndex) {
     const previousIndex = previousIndexRef.current;
-    if (previousIndex === imageIndex) return;
-
     const isNext =
       imageIndex === (previousIndex + 1) % images.length &&
       previousIndex !== images.length - 1;
@@ -47,41 +50,43 @@ export function Gallery({
     const direction = isNext || isWrapToStart ? "right" : "left";
 
     previousIndexRef.current = imageIndex;
-
-    // Guards against React StrictMode's double effect invocation: only the
-    // most recent call is allowed to schedule the entering->settled flip or
-    // the cleanup, so two overlapping runs can't stomp on each other and
-    // leave the transition stuck partway through.
-    const token = ++slideTokenRef.current;
     // `id` (not just `fromIndex`/`imageIndex`) drives the React `key` below
     // so every transition mounts fresh DOM nodes — once the carousel loops,
     // index-based keys repeat and React reuses the old element instead of
     // remounting it, which skips the "jump to off-screen start" paint and
     // silently breaks the animation.
-    setSlide({ id: token, fromIndex: previousIndex, direction, entering: true });
+    setSlide({
+      id: ++slideTokenRef.current,
+      fromIndex: previousIndex,
+      direction,
+      entering: true,
+    });
+  }
 
+  useEffect(() => {
+    if (!slide || !slide.entering) return;
+
+    const token = slide.id;
     // Two nested rAFs guarantee the browser has painted the "entering"
     // (off-screen) position before we flip it, so the transition actually
     // has a starting point to animate from instead of snapping instantly.
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
-        if (slideTokenRef.current !== token) return;
         setSlide((current) =>
-          current ? { ...current, entering: false } : null,
+          current?.id === token ? { ...current, entering: false } : current,
         );
       });
     });
     const timeout = setTimeout(() => {
-      if (slideTokenRef.current !== token) return;
-      setSlide(null);
+      setSlide((current) => (current?.id === token ? null : current));
     }, 500);
     return () => {
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
       clearTimeout(timeout);
     };
-  }, [imageIndex, images.length]);
+  }, [slide]);
 
   const handleImageClick = (event: React.MouseEvent<HTMLDivElement>) => {
     const container = imageContainerRef.current;
