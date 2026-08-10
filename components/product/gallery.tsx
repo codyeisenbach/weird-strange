@@ -239,7 +239,7 @@ export function Gallery({
                     <button
                       formAction={() => updateImage(index.toString())}
                       aria-label="Select product image"
-                      className="h-full w-full"
+                      className="h-full w-full cursor-pointer"
                     >
                       <GridTileImage
                         alt={image.altText}
