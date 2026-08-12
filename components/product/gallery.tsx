@@ -19,7 +19,7 @@ export function Gallery({
     : 0;
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
-    align: "start",
+    align: "center",
     loop: true,
   });
 
@@ -227,14 +227,14 @@ export function Gallery({
     "flex items-center justify-center p-1 text-ws-charcoal transition-transform ease-in-out active:scale-125 cursor-pointer lg:p-2";
 
   return (
-    <div className="flex w-full flex-col justify-center items-center h-fit overflow-x-hidden">
-      <div className="relative -mx-16 flex w-full items-center gap-6 md:-mx-16 lg:mx-0 lg:max-w-[750px]">
+    <div className="flex w-full flex-col justify-center items-center h-fit">
+      <div className="relative -mx-16 flex w-full items-center gap-6 overflow-x-hidden md:-mx-16 lg:mx-0 lg:max-w-[750px] lg:overflow-visible">
         {images.length > 1 ? (
           <button
             type="button"
             onClick={() => updateImage(previousImageIndex.toString())}
             aria-label="Previous product image"
-            className={`${buttonClassName} absolute left-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
+            className={`${buttonClassName} absolute left-0 z-10 hidden rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:flex lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
           >
             <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
           </button>
@@ -323,41 +323,78 @@ export function Gallery({
             type="button"
             onClick={() => updateImage(nextImageIndex.toString())}
             aria-label="Next product image"
-            className={`${buttonClassName} absolute right-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
+            className={`${buttonClassName} absolute right-0 z-10 hidden rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:flex lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
           >
             <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
           </button>
         ) : null}
       </div>
       {images.length > 1 ? (
-        <div
-          ref={emblaRef}
-          className="my-12 w-full max-w-[550px] overflow-hidden lg:max-w-[750px]"
-        >
-          <ul className="flex items-center gap-2 py-1">
-            {images.map((image, index) => {
-              const isActive = index === imageIndex;
+        <div className="my-12 w-full max-w-[550px] lg:max-w-[750px]">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => updateImage(previousImageIndex.toString())}
+              aria-label="Previous product image"
+              className={`${buttonClassName} absolute top-1/2 z-10 -translate-y-1/2 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:hidden`}
+              style={{ left: "calc(8px - 50vw + 50%)" }}
+            >
+              <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
+            </button>
+            <div className="flex justify-center">
+              <div
+                ref={emblaRef}
+                className="w-[264px] overflow-hidden lg:w-full"
+              >
+                <ul className="flex items-center gap-2 py-1">
+                  {images.map((image, index) => {
+                    const isActive = index === imageIndex;
 
-              return (
-                <li key={image.src} className="h-20 w-20 flex-none">
-                  <button
-                    type="button"
-                    onClick={() => updateImage(index.toString())}
-                    aria-label="Select product image"
-                    className="h-full w-full cursor-pointer"
-                  >
-                    <GridTileImage
-                      alt={image.altText}
-                      src={image.src}
-                      width={80}
-                      height={80}
-                      active={isActive}
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                    return (
+                      <li key={image.src} className="h-20 w-20 flex-none">
+                        <button
+                          type="button"
+                          onClick={() => updateImage(index.toString())}
+                          aria-label="Select product image"
+                          className="h-full w-full cursor-pointer"
+                        >
+                          <GridTileImage
+                            alt={image.altText}
+                            src={image.src}
+                            width={80}
+                            height={80}
+                            active={isActive}
+                          />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => updateImage(nextImageIndex.toString())}
+              aria-label="Next product image"
+              className={`${buttonClassName} absolute top-1/2 z-10 -translate-y-1/2 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:hidden`}
+              style={{ right: "calc(8px - 50vw + 50%)" }}
+            >
+              <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
+            </button>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2 lg:hidden">
+            {images.map((image, index) => (
+              <button
+                key={image.src}
+                type="button"
+                onClick={() => updateImage(index.toString())}
+                aria-label={`Go to image ${index + 1}`}
+                className={`h-2 w-2 cursor-pointer rounded-full transition-colors ${
+                  index === imageIndex ? "bg-ws-charcoal" : "bg-ws-charcoal/25"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       ) : null}
     </div>
