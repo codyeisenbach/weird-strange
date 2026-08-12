@@ -16,7 +16,7 @@ function SubmitButton({
   selectedVariantId: string | undefined;
 }) {
   const buttonClasses =
-    "relative flex w-full items-center justify-center bg-ws-charcoal p-4 tracking-wide text-ws-cream";
+    "relative flex w-full items-center justify-center bg-ws-charcoal p-4 tracking-wide text-ws-cream outline-4 outline-transparent transition-[transform,color,background-color,outline-color] duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]";
   const disabledClasses = "cursor-not-allowed opacity-60 hover:opacity-60";
 
   if (!availableForSale) {
@@ -45,9 +45,10 @@ function SubmitButton({
   return (
     <button
       aria-label="Add to cart"
-      className={clsx(buttonClasses, {
-        "hover:opacity-90": true,
-      })}
+      className={clsx(
+        buttonClasses,
+        "active:scale-[1.02] hover:bg-ws-cream hover:text-ws-charcoal hover:outline-ws-charcoal",
+      )}
     >
       <div className="absolute left-0 ml-5">
         <PlusIcon className="h-5" />
