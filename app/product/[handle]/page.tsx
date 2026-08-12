@@ -1,7 +1,10 @@
 import { GridTileImage } from "components/grid/tile";
 import Footer from "components/layout/footer";
 import { Gallery } from "components/product/gallery";
-import { ProductDescription } from "components/product/product-description";
+import {
+  ProductDescription,
+  ProductHeader,
+} from "components/product/product-description";
 import { HIDDEN_PRODUCT_TAG } from "lib/constants";
 import { getProduct, getProductRecommendations } from "lib/shopify";
 import type { Image } from "lib/shopify/types";
@@ -123,10 +126,14 @@ export default async function ProductPage(props: {
       />
       <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-4">
         <div className="flex flex-col bg-ws-cream p-8 text-ws-charcoal md:p-12 lg:flex-row lg:gap-24">
+          <div className="lg:hidden">
+            <ProductHeader product={product} />
+          </div>
+
           <div className="h-full w-full basis-full lg:basis-4/6">
             <Suspense
               fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden lg:max-h-[750px]" />
+                <div className="relative -mx-12 aspect-square h-full max-h-[550px] w-full overflow-hidden md:-mx-16 lg:mx-0 lg:max-h-[750px]" />
               }
             >
               <Gallery
@@ -139,6 +146,9 @@ export default async function ProductPage(props: {
           </div>
 
           <div className="basis-full lg:basis-2/6">
+            <div className="hidden lg:block">
+              <ProductHeader product={product} />
+            </div>
             <Suspense fallback={null}>
               <ProductDescription product={product} />
             </Suspense>

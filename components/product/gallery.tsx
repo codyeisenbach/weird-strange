@@ -150,12 +150,12 @@ export function Gallery({
   return (
     <form>
       <div className="flex w-full flex-col justify-center items-center h-fit">
-        <div className="flex w-full max-w-[550px] items-center gap-6 lg:max-w-[750px]">
+        <div className="relative -mx-12 flex w-full items-center gap-6 md:-mx-16 lg:mx-0 lg:max-w-[750px]">
           {images.length > 1 ? (
             <button
               formAction={() => updateImage(previousImageIndex.toString())}
               aria-label="Previous product image"
-              className={buttonClassName}
+              className={`${buttonClassName} absolute left-2 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
             >
               <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
             </button>
@@ -242,7 +242,7 @@ export function Gallery({
             <button
               formAction={() => updateImage(nextImageIndex.toString())}
               aria-label="Next product image"
-              className={buttonClassName}
+              className={`${buttonClassName} absolute right-2 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
             >
               <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
             </button>
