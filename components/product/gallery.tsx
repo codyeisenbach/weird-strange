@@ -89,6 +89,85 @@ export function Gallery({
     };
   }, [slide]);
 
+  const touchStateRef = useRef<{
+    x: number;
+    y: number;
+    horizontal: boolean;
+  } | null>(null);
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (zoom) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchStateRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      horizontal: false,
+    };
+  };
+
+  // Attached as a non-passive native listener (React's onTouchMove is
+  // passive by default and can't call preventDefault). Once a drag is
+  // clearly horizontal, we suppress the browser's own pan/scroll so the
+  // negative-margin gallery row can't be dragged sideways as a whole —
+  // otherwise the swipe both advances the slide and drags the page.
+  useEffect(() => {
+    const container = imageContainerRef.current;
+    if (!container) return;
+
+    const onTouchMove = (event: TouchEvent) => {
+      const start = touchStateRef.current;
+      const touch = event.touches[0];
+      if (!start || !touch) return;
+
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+
+      if (!start.horizontal) {
+        const DIRECTION_THRESHOLD = 10;
+        if (
+          Math.max(Math.abs(deltaX), Math.abs(deltaY)) < DIRECTION_THRESHOLD
+        ) {
+          return;
+        }
+        start.horizontal = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+
+      if (start.horizontal) event.preventDefault();
+    };
+
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => container.removeEventListener("touchmove", onTouchMove);
+  }, []);
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStateRef.current;
+    touchStateRef.current = null;
+    if (!start || zoom) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+
+    // Require a mostly-horizontal swipe past a minimum distance so vertical
+    // page scrolling isn't mistaken for a slide change.
+    const SWIPE_THRESHOLD = 50;
+    if (
+      Math.abs(deltaX) < SWIPE_THRESHOLD ||
+      Math.abs(deltaX) < Math.abs(deltaY)
+    ) {
+      return;
+    }
+
+    if (deltaX < 0) {
+      updateImage(nextImageIndex.toString());
+    } else {
+      updateImage(previousImageIndex.toString());
+    }
+  };
+
   const pointToZoomOrigin = (event: { clientX: number; clientY: number }) => {
     const container = imageContainerRef.current;
     if (!container) return null;
@@ -155,7 +234,7 @@ export function Gallery({
             <button
               formAction={() => updateImage(previousImageIndex.toString())}
               aria-label="Previous product image"
-              className={`${buttonClassName} absolute left-2 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
+              className={`${buttonClassName} absolute left-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
             >
               <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
             </button>
@@ -165,7 +244,9 @@ export function Gallery({
             ref={imageContainerRef}
             onClick={handleImageClick}
             onMouseMove={handleImageMouseMove}
-            className={`relative aspect-square h-full max-h-[550px] w-full overflow-hidden lg:max-h-[750px] ${
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className={`relative aspect-square h-full max-h-[550px] w-full touch-pan-y overflow-hidden lg:max-h-[750px] ${
               zoom ? "cursor-zoom-out" : "cursor-zoom-in"
             }`}
           >
@@ -242,7 +323,7 @@ export function Gallery({
             <button
               formAction={() => updateImage(nextImageIndex.toString())}
               aria-label="Next product image"
-              className={`${buttonClassName} absolute right-2 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
+              className={`${buttonClassName} absolute right-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
             >
               <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
             </button>
