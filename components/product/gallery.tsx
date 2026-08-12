@@ -20,7 +20,7 @@ export function Gallery({
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
-    containScroll: "trimSnaps",
+    loop: true,
   });
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
