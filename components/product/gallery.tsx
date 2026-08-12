@@ -224,12 +224,12 @@ export function Gallery({
     imageIndex === 0 ? images.length - 1 : imageIndex - 1;
 
   const buttonClassName =
-    "flex items-center justify-center p-2 text-ws-charcoal transition-transform ease-in-out active:scale-125 cursor-pointer";
+    "flex items-center justify-center p-1 text-ws-charcoal transition-transform ease-in-out active:scale-125 cursor-pointer lg:p-2";
 
   return (
     <form>
-      <div className="flex w-full flex-col justify-center items-center h-fit">
-        <div className="relative -mx-12 flex w-full items-center gap-6 md:-mx-16 lg:mx-0 lg:max-w-[750px]">
+      <div className="flex w-full flex-col justify-center items-center h-fit overflow-x-hidden">
+        <div className="relative -mx-16 flex w-full items-center gap-6 md:-mx-16 lg:mx-0 lg:max-w-[750px]">
           {images.length > 1 ? (
             <button
               formAction={() => updateImage(previousImageIndex.toString())}
@@ -334,7 +334,7 @@ export function Gallery({
             ref={emblaRef}
             className="my-12 w-full max-w-[550px] overflow-hidden lg:max-w-[750px]"
           >
-            <ul className="flex items-center justify-center gap-2 py-1">
+            <ul className="flex items-center gap-2 py-1">
               {images.map((image, index) => {
                 const isActive = index === imageIndex;
 
