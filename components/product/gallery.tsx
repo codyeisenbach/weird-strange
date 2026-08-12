@@ -227,139 +227,139 @@ export function Gallery({
     "flex items-center justify-center p-1 text-ws-charcoal transition-transform ease-in-out active:scale-125 cursor-pointer lg:p-2";
 
   return (
-    <form>
-      <div className="flex w-full flex-col justify-center items-center h-fit overflow-x-hidden">
-        <div className="relative -mx-16 flex w-full items-center gap-6 md:-mx-16 lg:mx-0 lg:max-w-[750px]">
-          {images.length > 1 ? (
-            <button
-              formAction={() => updateImage(previousImageIndex.toString())}
-              aria-label="Previous product image"
-              className={`${buttonClassName} absolute left-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
-            >
-              <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
-            </button>
-          ) : null}
-
-          <div
-            ref={imageContainerRef}
-            onClick={handleImageClick}
-            onMouseMove={handleImageMouseMove}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className={`relative aspect-square h-full max-h-[550px] w-full touch-pan-y overflow-hidden lg:max-h-[750px] ${
-              zoom ? "cursor-zoom-out" : "cursor-zoom-in"
-            }`}
-          >
-            {slide && images[slide.fromIndex] && (
-              <div
-                key={`outgoing-${slide.id}`}
-                className="absolute inset-0"
-                style={{
-                  transition:
-                    "transform 500ms ease-out, opacity 200ms ease-out",
-                  transform: `translateX(${
-                    slide.entering
-                      ? "0"
-                      : slide.direction === "right"
-                        ? "-100%"
-                        : "100%"
-                  })`,
-                  opacity: slide.entering ? 1 : 0,
-                }}
-              >
-                <Image
-                  className="h-full w-full object-contain"
-                  fill
-                  sizes="(min-width: 1024px) 66vw, 100vw"
-                  alt={images[slide.fromIndex]?.altText as string}
-                  src={images[slide.fromIndex]?.src as string}
-                />
-              </div>
-            )}
-            {images[imageIndex] && (
-              <div
-                key={slide ? `current-${slide.id}` : `current-${imageIndex}`}
-                className="absolute inset-0"
-                style={
-                  slide
-                    ? {
-                        transition:
-                          "transform 500ms ease-out, opacity 200ms ease-out",
-                        transform: `translateX(${
-                          slide.entering
-                            ? slide.direction === "right"
-                              ? "100%"
-                              : "-100%"
-                            : "0"
-                        })`,
-                        opacity: slide.entering ? 0 : 1,
-                      }
-                    : undefined
-                }
-              >
-                <Image
-                  ref={zoomedImageRef}
-                  className="h-full w-full object-contain"
-                  style={
-                    zoom
-                      ? {
-                          transform: "scale(2.5)",
-                          transformOrigin: `${zoom.x}% ${zoom.y}%`,
-                          transition: "transform 300ms ease-out",
-                        }
-                      : { transition: "transform 300ms ease-out" }
-                  }
-                  fill
-                  sizes="(min-width: 1024px) 66vw, 100vw"
-                  alt={images[imageIndex]?.altText as string}
-                  src={images[imageIndex]?.src as string}
-                  priority={true}
-                />
-              </div>
-            )}
-          </div>
-
-          {images.length > 1 ? (
-            <button
-              formAction={() => updateImage(nextImageIndex.toString())}
-              aria-label="Next product image"
-              className={`${buttonClassName} absolute right-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
-            >
-              <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
-            </button>
-          ) : null}
-        </div>
+    <div className="flex w-full flex-col justify-center items-center h-fit overflow-x-hidden">
+      <div className="relative -mx-16 flex w-full items-center gap-6 md:-mx-16 lg:mx-0 lg:max-w-[750px]">
         {images.length > 1 ? (
-          <div
-            ref={emblaRef}
-            className="my-12 w-full max-w-[550px] overflow-hidden lg:max-w-[750px]"
+          <button
+            type="button"
+            onClick={() => updateImage(previousImageIndex.toString())}
+            aria-label="Previous product image"
+            className={`${buttonClassName} absolute left-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
           >
-            <ul className="flex items-center gap-2 py-1">
-              {images.map((image, index) => {
-                const isActive = index === imageIndex;
+            <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
+          </button>
+        ) : null}
 
-                return (
-                  <li key={image.src} className="h-20 w-20 flex-none">
-                    <button
-                      formAction={() => updateImage(index.toString())}
-                      aria-label="Select product image"
-                      className="h-full w-full cursor-pointer"
-                    >
-                      <GridTileImage
-                        alt={image.altText}
-                        src={image.src}
-                        width={80}
-                        height={80}
-                        active={isActive}
-                      />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+        <div
+          ref={imageContainerRef}
+          onClick={handleImageClick}
+          onMouseMove={handleImageMouseMove}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className={`relative aspect-square h-full max-h-[550px] w-full touch-pan-y overflow-hidden lg:max-h-[750px] ${
+            zoom ? "cursor-zoom-out" : "cursor-zoom-in"
+          }`}
+        >
+          {slide && images[slide.fromIndex] && (
+            <div
+              key={`outgoing-${slide.id}`}
+              className="absolute inset-0"
+              style={{
+                transition: "transform 500ms ease-out, opacity 200ms ease-out",
+                transform: `translateX(${
+                  slide.entering
+                    ? "0"
+                    : slide.direction === "right"
+                      ? "-100%"
+                      : "100%"
+                })`,
+                opacity: slide.entering ? 1 : 0,
+              }}
+            >
+              <Image
+                className="h-full w-full object-contain"
+                fill
+                sizes="(min-width: 1024px) 66vw, 100vw"
+                alt={images[slide.fromIndex]?.altText as string}
+                src={images[slide.fromIndex]?.src as string}
+              />
+            </div>
+          )}
+          {images[imageIndex] && (
+            <div
+              key={slide ? `current-${slide.id}` : `current-${imageIndex}`}
+              className="absolute inset-0"
+              style={
+                slide
+                  ? {
+                      transition:
+                        "transform 500ms ease-out, opacity 200ms ease-out",
+                      transform: `translateX(${
+                        slide.entering
+                          ? slide.direction === "right"
+                            ? "100%"
+                            : "-100%"
+                          : "0"
+                      })`,
+                      opacity: slide.entering ? 0 : 1,
+                    }
+                  : undefined
+              }
+            >
+              <Image
+                ref={zoomedImageRef}
+                className="h-full w-full object-contain"
+                style={
+                  zoom
+                    ? {
+                        transform: "scale(2.5)",
+                        transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                        transition: "transform 300ms ease-out",
+                      }
+                    : { transition: "transform 300ms ease-out" }
+                }
+                fill
+                sizes="(min-width: 1024px) 66vw, 100vw"
+                alt={images[imageIndex]?.altText as string}
+                src={images[imageIndex]?.src as string}
+                priority={true}
+              />
+            </div>
+          )}
+        </div>
+
+        {images.length > 1 ? (
+          <button
+            type="button"
+            onClick={() => updateImage(nextImageIndex.toString())}
+            aria-label="Next product image"
+            className={`${buttonClassName} absolute right-0 z-10 rounded-full bg-ws-cream/80 backdrop-blur-sm lg:static lg:z-auto lg:rounded-none lg:bg-transparent lg:backdrop-blur-none`}
+          >
+            <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
+          </button>
         ) : null}
       </div>
-    </form>
+      {images.length > 1 ? (
+        <div
+          ref={emblaRef}
+          className="my-12 w-full max-w-[550px] overflow-hidden lg:max-w-[750px]"
+        >
+          <ul className="flex items-center gap-2 py-1">
+            {images.map((image, index) => {
+              const isActive = index === imageIndex;
+
+              return (
+                <li key={image.src} className="h-20 w-20 flex-none">
+                  <button
+                    type="button"
+                    onClick={() => updateImage(index.toString())}
+                    aria-label="Select product image"
+                    className="h-full w-full cursor-pointer"
+                  >
+                    <GridTileImage
+                      alt={image.altText}
+                      src={image.src}
+                      width={80}
+                      height={80}
+                      active={isActive}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
