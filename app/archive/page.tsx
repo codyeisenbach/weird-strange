@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function ArchivePage() {
   return (
     <>
-      <section className="mx-auto max-w-(--breakpoint-2xl) px-4 py-12">
+      <section className="mx-auto max-w-(--breakpoint-2xl) px-2 py-12 md:px-4">
         <h1 className="text-3xl font-bold text-ws-charcoal">Archive</h1>
         <p className="mt-2 max-w-prose text-ws-text-muted">
           A running record of the artists and publications behind the work.

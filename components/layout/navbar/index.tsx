@@ -22,7 +22,7 @@ export async function Navbar() {
           <MobileMenu menu={menu} />
         </Suspense>
       </div>
-      <div className="flex w-full items-center justify-between max-w-[1280px] px-4 md:px-8">
+      <div className="flex w-full items-center justify-between max-w-[1280px] px-2 md:px-8">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:static md:left-auto md:top-auto md:w-fit md:translate-x-0 md:translate-y-0">
           <Link
             href="/"

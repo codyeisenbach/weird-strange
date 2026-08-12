@@ -13,17 +13,17 @@ export function ProductHeader({ product }: { product: Product }) {
 
   return (
     <div className="mb-6 flex flex-col lg:border-b border-ws-border/20 pb-6">
-      <h1 className="mb-6 text-5xl font-medium">{product.title}</h1>
+      <h1 className="mb-6 text-3xl font-medium lg:text-5xl">{product.title}</h1>
       <div className="inline-flex w-fit items-center gap-3 bg-ws-charcoal px-4 py-2">
         {hasDiscount ? (
           <Price
-            className="text-3xl font-light text-red-600 line-through"
+            className="text-xl font-light text-red-600 line-through lg:text-3xl"
             amount={compareAtPrice.amount}
             currencyCode={compareAtPrice.currencyCode}
           />
         ) : null}
         <Price
-          className="text-4xl font-light text-white"
+          className="text-2xl font-light text-white lg:text-4xl"
           amount={price.amount}
           currencyCode={price.currencyCode}
         />

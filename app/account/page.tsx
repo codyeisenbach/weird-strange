@@ -13,7 +13,7 @@ export const metadata = {
 export default async function AccountPage() {
   if (!customerAccountConfigured) {
     return (
-      <div className="mx-auto max-w-screen-sm px-4 py-20 text-ws-charcoal">
+      <div className="mx-auto max-w-screen-sm px-2 py-20 text-ws-charcoal md:px-4">
         <h1 className="mb-4 text-2xl font-bold">Account</h1>
         <p>
           Customer accounts are not configured yet. Set SHOPIFY_SHOP_ID and
@@ -46,7 +46,7 @@ export default async function AccountPage() {
     "there";
 
   return (
-    <div className="mx-auto max-w-screen-sm px-4 py-20 text-ws-charcoal">
+    <div className="mx-auto max-w-screen-sm px-2 py-20 text-ws-charcoal md:px-4">
       <h1 className="mb-4 text-2xl font-bold">Hi, {name}</h1>
       {customer.emailAddress?.emailAddress ? (
         <p className="mb-8">

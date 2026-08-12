@@ -124,7 +124,7 @@ export default async function ProductPage(props: {
           __html: JSON.stringify(productJsonLd),
         }}
       />
-      <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-4">
+      <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-2 md:px-4">
         <div className="flex flex-col bg-ws-cream p-8 text-ws-charcoal md:p-12 lg:flex-row lg:gap-24">
           <div className="lg:hidden">
             <ProductHeader product={product} />
