@@ -89,10 +89,7 @@ export function Gallery({
     };
   }, [slide]);
 
-  const pointToZoomOrigin = (event: {
-    clientX: number;
-    clientY: number;
-  }) => {
+  const pointToZoomOrigin = (event: { clientX: number; clientY: number }) => {
     const container = imageContainerRef.current;
     if (!container) return null;
 
@@ -153,7 +150,7 @@ export function Gallery({
   return (
     <form>
       <div className="flex w-full flex-col justify-center items-center h-fit">
-        <div className="flex w-full max-w-[550px] items-center gap-6">
+        <div className="flex w-full max-w-[550px] items-center gap-6 lg:max-w-[750px]">
           {images.length > 1 ? (
             <button
               formAction={() => updateImage(previousImageIndex.toString())}
@@ -168,7 +165,7 @@ export function Gallery({
             ref={imageContainerRef}
             onClick={handleImageClick}
             onMouseMove={handleImageMouseMove}
-            className={`relative aspect-square h-full max-h-[550px] w-full overflow-hidden ${
+            className={`relative aspect-square h-full max-h-[550px] w-full overflow-hidden lg:max-h-[750px] ${
               zoom ? "cursor-zoom-out" : "cursor-zoom-in"
             }`}
           >
@@ -254,7 +251,7 @@ export function Gallery({
         {images.length > 1 ? (
           <div
             ref={emblaRef}
-            className="my-12 w-full max-w-[550px] overflow-hidden"
+            className="my-12 w-full max-w-[550px] overflow-hidden lg:max-w-[750px]"
           >
             <ul className="flex items-center justify-center gap-2 py-1">
               {images.map((image, index) => {

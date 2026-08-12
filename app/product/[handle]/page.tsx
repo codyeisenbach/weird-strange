@@ -122,11 +122,11 @@ export default async function ProductPage(props: {
         }}
       />
       <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-4">
-        <div className="flex flex-col bg-ws-cream p-8 text-ws-charcoal md:p-12 lg:flex-row lg:gap-8">
+        <div className="flex flex-col bg-ws-cream p-8 text-ws-charcoal md:p-12 lg:flex-row lg:gap-24">
           <div className="h-full w-full basis-full lg:basis-4/6">
             <Suspense
               fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
+                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden lg:max-h-[750px]" />
               }
             >
               <Gallery
@@ -175,7 +175,11 @@ async function RelatedProducts({ id }: { id: string }) {
               key={product.handle}
               className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
             >
-              <Link className="relative h-full w-full" href={href} prefetch={true}>
+              <Link
+                className="relative h-full w-full"
+                href={href}
+                prefetch={true}
+              >
                 <GridTileImage
                   alt={product.featuredImage?.altText || product.title}
                   label={{
