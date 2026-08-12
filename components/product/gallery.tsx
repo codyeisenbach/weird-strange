@@ -23,150 +23,41 @@ export function Gallery({
     loop: true,
   });
 
+  const [emblaMainRef, emblaMainApi] = useEmblaCarousel({
+    align: "start",
+    loop: true,
+    // Touch-only dragging: mouse drags are left alone so the existing
+    // desktop click-to-zoom affordance keeps working without Embla
+    // intercepting the mousedown as a slide-drag.
+    watchDrag: (_, event) => event.type === "touchstart",
+  });
+
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const zoomedImageRef = useRef<HTMLImageElement>(null);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
 
-  const [slide, setSlide] = useState<{
-    id: number;
-    fromIndex: number;
-    direction: "left" | "right";
-    entering: boolean;
-  } | null>(null);
-  const previousIndexRef = useRef(imageIndex);
-  const slideTokenRef = useRef(0);
-
-  // Computed synchronously during render (React's "adjusting state while
-  // rendering" pattern) rather than in a useEffect. An effect runs *after*
-  // the browser paints the render that already shows the new imageIndex, so
-  // there'd be one painted frame with the new image at full opacity and no
-  // slide wrapper yet — a visible flash before the animation kicks in.
-  if (previousIndexRef.current !== imageIndex) {
-    const previousIndex = previousIndexRef.current;
-    const isNext =
-      imageIndex === (previousIndex + 1) % images.length &&
-      previousIndex !== images.length - 1;
-    const isWrapToStart =
-      previousIndex === images.length - 1 && imageIndex === 0;
-    const direction = isNext || isWrapToStart ? "right" : "left";
-
-    previousIndexRef.current = imageIndex;
-    // `id` (not just `fromIndex`/`imageIndex`) drives the React `key` below
-    // so every transition mounts fresh DOM nodes — once the carousel loops,
-    // index-based keys repeat and React reuses the old element instead of
-    // remounting it, which skips the "jump to off-screen start" paint and
-    // silently breaks the animation.
-    setSlide({
-      id: ++slideTokenRef.current,
-      fromIndex: previousIndex,
-      direction,
-      entering: true,
-    });
-  }
-
+  // Keep the main-image carousel's position in sync with imageIndex, which
+  // is the single source of truth (driven by the URL search param).
   useEffect(() => {
-    if (!slide || !slide.entering) return;
+    if (!emblaMainApi) return;
+    if (emblaMainApi.selectedScrollSnap() === imageIndex) return;
+    emblaMainApi.scrollTo(imageIndex);
+  }, [emblaMainApi, imageIndex]);
 
-    const token = slide.id;
-    // Two nested rAFs guarantee the browser has painted the "entering"
-    // (off-screen) position before we flip it, so the transition actually
-    // has a starting point to animate from instead of snapping instantly.
-    let raf2 = 0;
-    const raf1 = requestAnimationFrame(() => {
-      raf2 = requestAnimationFrame(() => {
-        setSlide((current) =>
-          current?.id === token ? { ...current, entering: false } : current,
-        );
-      });
-    });
-    const timeout = setTimeout(() => {
-      setSlide((current) => (current?.id === token ? null : current));
-    }, 500);
+  // Drive imageIndex from Embla's own drag/swipe selection, so a finger
+  // drag both moves the image in real time (Embla's native behavior) and
+  // updates the URL param that everything else (thumbnails, arrows) reads.
+  useEffect(() => {
+    if (!emblaMainApi) return;
+    const onSelect = () => {
+      updateImage(emblaMainApi.selectedScrollSnap().toString());
+    };
+    emblaMainApi.on("select", onSelect);
     return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      clearTimeout(timeout);
+      emblaMainApi.off("select", onSelect);
     };
-  }, [slide]);
-
-  const touchStateRef = useRef<{
-    x: number;
-    y: number;
-    horizontal: boolean;
-  } | null>(null);
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (zoom) return;
-    const touch = event.touches[0];
-    if (!touch) return;
-    touchStateRef.current = {
-      x: touch.clientX,
-      y: touch.clientY,
-      horizontal: false,
-    };
-  };
-
-  // Attached as a non-passive native listener (React's onTouchMove is
-  // passive by default and can't call preventDefault). Once a drag is
-  // clearly horizontal, we suppress the browser's own pan/scroll so the
-  // negative-margin gallery row can't be dragged sideways as a whole —
-  // otherwise the swipe both advances the slide and drags the page.
-  useEffect(() => {
-    const container = imageContainerRef.current;
-    if (!container) return;
-
-    const onTouchMove = (event: TouchEvent) => {
-      const start = touchStateRef.current;
-      const touch = event.touches[0];
-      if (!start || !touch) return;
-
-      const deltaX = touch.clientX - start.x;
-      const deltaY = touch.clientY - start.y;
-
-      if (!start.horizontal) {
-        const DIRECTION_THRESHOLD = 10;
-        if (
-          Math.max(Math.abs(deltaX), Math.abs(deltaY)) < DIRECTION_THRESHOLD
-        ) {
-          return;
-        }
-        start.horizontal = Math.abs(deltaX) > Math.abs(deltaY);
-      }
-
-      if (start.horizontal) event.preventDefault();
-    };
-
-    container.addEventListener("touchmove", onTouchMove, { passive: false });
-    return () => container.removeEventListener("touchmove", onTouchMove);
-  }, []);
-
-  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    const start = touchStateRef.current;
-    touchStateRef.current = null;
-    if (!start || zoom) return;
-
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-
-    // Require a mostly-horizontal swipe past a minimum distance so vertical
-    // page scrolling isn't mistaken for a slide change.
-    const SWIPE_THRESHOLD = 50;
-    if (
-      Math.abs(deltaX) < SWIPE_THRESHOLD ||
-      Math.abs(deltaX) < Math.abs(deltaY)
-    ) {
-      return;
-    }
-
-    if (deltaX < 0) {
-      updateImage(nextImageIndex.toString());
-    } else {
-      updateImage(previousImageIndex.toString());
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emblaMainApi]);
 
   const pointToZoomOrigin = (event: { clientX: number; clientY: number }) => {
     const container = imageContainerRef.current;
@@ -242,80 +133,45 @@ export function Gallery({
 
         <div
           ref={imageContainerRef}
-          onClick={handleImageClick}
-          onMouseMove={handleImageMouseMove}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
           className={`relative aspect-square h-full max-h-[550px] w-full touch-pan-y overflow-hidden lg:max-h-[750px] ${
             zoom ? "cursor-zoom-out" : "cursor-zoom-in"
           }`}
         >
-          {slide && images[slide.fromIndex] && (
-            <div
-              key={`outgoing-${slide.id}`}
-              className="absolute inset-0"
-              style={{
-                transition: "transform 500ms ease-out, opacity 200ms ease-out",
-                transform: `translateX(${
-                  slide.entering
-                    ? "0"
-                    : slide.direction === "right"
-                      ? "-100%"
-                      : "100%"
-                })`,
-                opacity: slide.entering ? 1 : 0,
-              }}
-            >
-              <Image
-                className="h-full w-full object-contain"
-                fill
-                sizes="(min-width: 1024px) 66vw, 100vw"
-                alt={images[slide.fromIndex]?.altText as string}
-                src={images[slide.fromIndex]?.src as string}
-              />
-            </div>
-          )}
-          {images[imageIndex] && (
-            <div
-              key={slide ? `current-${slide.id}` : `current-${imageIndex}`}
-              className="absolute inset-0"
-              style={
-                slide
-                  ? {
-                      transition:
-                        "transform 500ms ease-out, opacity 200ms ease-out",
-                      transform: `translateX(${
-                        slide.entering
-                          ? slide.direction === "right"
-                            ? "100%"
-                            : "-100%"
-                          : "0"
-                      })`,
-                      opacity: slide.entering ? 0 : 1,
-                    }
-                  : undefined
-              }
-            >
-              <Image
-                ref={zoomedImageRef}
-                className="h-full w-full object-contain"
-                style={
-                  zoom
-                    ? {
-                        transform: "scale(2.5)",
-                        transformOrigin: `${zoom.x}% ${zoom.y}%`,
-                        transition: "transform 300ms ease-out",
+          <div ref={emblaMainRef} className="h-full w-full overflow-hidden">
+            <div className="flex h-full">
+              {images.map((image, index) => {
+                const isActive = index === imageIndex;
+
+                return (
+                  <div
+                    key={image.src}
+                    className="relative h-full w-full flex-none"
+                    onClick={isActive ? handleImageClick : undefined}
+                    onMouseMove={isActive ? handleImageMouseMove : undefined}
+                  >
+                    <Image
+                      ref={isActive ? zoomedImageRef : undefined}
+                      className="h-full w-full object-contain"
+                      style={
+                        isActive && zoom
+                          ? {
+                              transform: "scale(2.5)",
+                              transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                              transition: "transform 300ms ease-out",
+                            }
+                          : { transition: "transform 300ms ease-out" }
                       }
-                    : { transition: "transform 300ms ease-out" }
-                }
-                fill
-                sizes="(min-width: 1024px) 66vw, 100vw"
-                alt={images[imageIndex]?.altText as string}
-                src={images[imageIndex]?.src as string}
-                priority={true}
-              />
+                      fill
+                      sizes="(min-width: 1024px) 66vw, 100vw"
+                      alt={image.altText}
+                      src={image.src}
+                      priority={isActive}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </div>
         </div>
 
         {images.length > 1 ? (
