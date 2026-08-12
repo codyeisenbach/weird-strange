@@ -23,11 +23,6 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
-  html,
-  body {
-    overscroll-behavior-y: none;
-  }
-
   /* Allow the page to keep scrolling behind the cart drawer, overriding
      Headless UI's Dialog scroll lock (set as an inline style on <html>). */
   html {
