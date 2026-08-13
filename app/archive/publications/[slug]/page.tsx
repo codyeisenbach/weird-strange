@@ -9,9 +9,12 @@ import {
 } from "components/archive/wiki-article";
 import { WikiEditable } from "components/archive/wiki-editable";
 import Footer from "components/layout/footer";
+import { JsonLd } from "components/seo/json-ld";
 import { getAdminUser } from "lib/admin/auth";
 import { getPublication } from "lib/archive";
 import type { PublicationDetail } from "lib/archive/types";
+import { siteUrl } from "lib/site-config";
+import { buildBreadcrumbJsonLd } from "lib/shopify/structured-data";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -114,8 +117,19 @@ export default async function PublicationPage(props: {
 
   if (!publication) return notFound();
 
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: siteUrl },
+    { name: "Archive", url: `${siteUrl}/archive` },
+    { name: "Publications", url: `${siteUrl}/archive/publications` },
+    {
+      name: publication.title,
+      url: `${siteUrl}/archive/publications/${publication.slug}`,
+    },
+  ]);
+
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd} />
       {admin ? (
         <WikiEditable
           subtitle="From the Weird Strange Archive"

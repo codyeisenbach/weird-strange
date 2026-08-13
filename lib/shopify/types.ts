@@ -83,6 +83,7 @@ export type ProductVariant = {
   id: string;
   title: string;
   availableForSale: boolean;
+  sku: string;
   selectedOptions: {
     name: string;
     value: string;
@@ -124,6 +125,7 @@ export type ShopifyProduct = {
   title: string;
   description: string;
   descriptionHtml: string;
+  vendor: string;
   options: ProductOption[];
   priceRange: {
     maxVariantPrice: Money;

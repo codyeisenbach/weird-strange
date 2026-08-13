@@ -1,12 +1,18 @@
 import { GridTileImage } from "components/grid/tile";
 import Footer from "components/layout/footer";
+import { JsonLd } from "components/seo/json-ld";
 import { Gallery } from "components/product/gallery";
 import {
   ProductDescription,
   ProductHeader,
 } from "components/product/product-description";
 import { HIDDEN_PRODUCT_TAG } from "lib/constants";
+import { siteUrl } from "lib/site-config";
 import { getProduct, getProductRecommendations } from "lib/shopify";
+import {
+  buildBreadcrumbJsonLd,
+  buildProductJsonLd,
+} from "lib/shopify/structured-data";
 import type { Image } from "lib/shopify/types";
 import {
   getColorFromAltText,
@@ -99,31 +105,16 @@ export default async function ProductPage(props: {
       ]
     : filteredImages;
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description: product.description,
-    image: product.featuredImage.url,
-    offers: {
-      "@type": "AggregateOffer",
-      availability: product.availableForSale
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      priceCurrency: product.priceRange.minVariantPrice.currencyCode,
-      highPrice: product.priceRange.maxVariantPrice.amount,
-      lowPrice: product.priceRange.minVariantPrice.amount,
-    },
-  };
+  const productUrl = `${siteUrl}/product/${product.handle}`;
+  const productJsonLd = buildProductJsonLd(product, productUrl);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Home", url: siteUrl },
+    { name: product.title, url: productUrl },
+  ]);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd),
-        }}
-      />
+      <JsonLd data={[productJsonLd, breadcrumbJsonLd]} />
       <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-1 md:px-4">
         <div className="flex flex-col bg-ws-cream px-4 py-2 text-ws-charcoal md:p-12 lg:flex-row lg:gap-24">
           <div className="lg:hidden">

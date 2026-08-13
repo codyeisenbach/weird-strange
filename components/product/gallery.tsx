@@ -202,7 +202,7 @@ export function Gallery({
                 ref={emblaRef}
                 className="w-[264px] overflow-hidden lg:w-full"
               >
-                <ul className="flex items-center gap-2 py-1">
+                <ul className="flex items-center justify-center gap-2 py-1">
                   {images.map((image, index) => {
                     const isActive = index === imageIndex;
 

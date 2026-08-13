@@ -1,8 +1,13 @@
+import { JsonLd } from "components/seo/json-ld";
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar } from "components/layout/navbar";
 import { SaleBanner } from "components/layout/sale-banner";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
+import {
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+} from "lib/structured-data/site";
 import { baseUrl } from "lib/utils";
 import { ReactNode } from "react";
 import { Toaster } from "sonner";
@@ -33,6 +38,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={GeistSans.variable}>
       <head>
+        <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
         {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
