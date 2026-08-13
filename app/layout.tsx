@@ -1,10 +1,10 @@
-import { JsonLd } from "components/seo/json-ld";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar } from "components/layout/navbar";
 import { SaleBanner } from "components/layout/sale-banner";
+import { JsonLd } from "components/seo/json-ld";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
-import { GoogleTagManager } from "@next/third-parties/google";
 import {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
@@ -42,7 +42,10 @@ export default async function RootLayout({
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
       <body className="bg-ws-cream flex justify-center flex-col w-full text-ws-charcoal selection:bg-teal-300 dark:selection:bg-pink-500 dark:selection:text-white">
-        <GoogleTagManager gtmId="GTM-N99WWR99" />
+        <GoogleTagManager
+          gtmId="GTM-P62WNNWZ"
+          gtmScriptUrl="https://sgtm.weirdstrange.com/gtm.js"
+        />
         <CartProvider cartPromise={cart}>
           <SaleBanner />
           <Navbar />
