@@ -2,6 +2,7 @@
 
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { removeItem } from "components/cart/actions";
+import { trackRemoveFromCart } from "lib/analytics/ecommerce";
 import type { CartItem } from "lib/shopify/types";
 import { useActionState } from "react";
 
@@ -19,6 +20,7 @@ export function DeleteItemButton({
   return (
     <form
       action={async () => {
+        trackRemoveFromCart(item);
         optimisticUpdate(merchandiseId, "delete");
         removeItemAction();
       }}

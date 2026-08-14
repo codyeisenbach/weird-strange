@@ -3,6 +3,7 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { addItem } from "components/cart/actions";
+import { trackAddToCart } from "lib/analytics/ecommerce";
 import { Product, ProductVariant } from "lib/shopify/types";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
@@ -79,6 +80,7 @@ export function AddToCart({ product }: { product: Product }) {
   return (
     <form
       action={async () => {
+        trackAddToCart(finalVariant, product);
         addCartItem(finalVariant, product);
         addItemAction();
       }}

@@ -6,6 +6,8 @@ import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import LoadingDots from "components/loading-dots";
 import Price from "components/price";
 import { DEFAULT_OPTION } from "lib/constants";
+import { trackBeginCheckout } from "lib/analytics/ecommerce";
+import type { Cart } from "lib/shopify/types";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -220,7 +222,7 @@ export default function CartModal() {
                     </div>
                   </div>
                   <form action={redirectToCheckout}>
-                    <CheckoutButton />
+                    <CheckoutButton cart={cart} />
                   </form>
                 </div>
               )}
@@ -245,7 +247,7 @@ function CloseCart({ className }: { className?: string }) {
   );
 }
 
-function CheckoutButton() {
+function CheckoutButton({ cart }: { cart: Cart | undefined }) {
   const { pending } = useFormStatus();
 
   return (
@@ -253,6 +255,7 @@ function CheckoutButton() {
       className="block w-full rounded-full bg-ws-charcoal p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
       type="submit"
       disabled={pending}
+      onClick={() => cart && trackBeginCheckout(cart)}
     >
       {pending ? <LoadingDots className="bg-white" /> : "Proceed to Checkout"}
     </button>
