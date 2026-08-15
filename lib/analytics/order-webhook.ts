@@ -1,0 +1,162 @@
+import { createHash, createHmac, timingSafeEqual } from "crypto";
+import { NextRequest, NextResponse } from "next/server";
+
+type OrderLineItem = {
+  id: string;
+  title: string;
+  price: string;
+  quantity: number;
+};
+
+type OrderPayload = {
+  id: string;
+  email?: string;
+  phone?: string;
+  currency: string;
+  total_price: string;
+  line_items: OrderLineItem[];
+};
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function normalizePhone(phone: string) {
+  return phone.replace(/[^0-9]/g, "").replace(/^0+/, "");
+}
+
+function sha256(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function isValidShopifyHmac(rawBody: string, hmacHeader: string | null) {
+  const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
+
+  if (!secret || !hmacHeader) return false;
+
+  const digest = createHmac("sha256", secret)
+    .update(rawBody, "utf8")
+    .digest("base64");
+
+  const digestBuffer = Buffer.from(digest);
+  const headerBuffer = Buffer.from(hmacHeader);
+
+  if (digestBuffer.length !== headerBuffer.length) return false;
+
+  return timingSafeEqual(digestBuffer, headerBuffer);
+}
+
+async function sendGA4Purchase(order: OrderPayload) {
+  const measurementId = process.env.GA4_MEASUREMENT_ID;
+  const apiSecret = process.env.GA4_MEASUREMENT_PROTOCOL_SECRET;
+
+  if (!measurementId || !apiSecret) {
+    console.error("GA4 Measurement Protocol env vars are not configured.");
+    return;
+  }
+
+  const clientId = `${order.id}.${order.id}`;
+
+  const res = await fetch(
+    `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: clientId,
+        events: [
+          {
+            name: "purchase",
+            params: {
+              transaction_id: order.id,
+              value: Number(order.total_price),
+              currency: order.currency,
+              items: order.line_items.map((item) => ({
+                item_id: item.id,
+                item_name: item.title,
+                price: Number(item.price),
+                quantity: item.quantity,
+              })),
+            },
+          },
+        ],
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    console.error("GA4 Measurement Protocol request failed", res.status);
+  }
+}
+
+async function sendMetaPurchase(order: OrderPayload) {
+  const pixelId = process.env.META_PIXEL_ID;
+  const accessToken = process.env.META_CAPI_ACCESS_TOKEN;
+
+  if (!pixelId || !accessToken) {
+    console.error("Meta Conversions API env vars are not configured.");
+    return;
+  }
+
+  const userData: Record<string, string[]> = {};
+  if (order.email) userData.em = [sha256(normalizeEmail(order.email))];
+  if (order.phone) userData.ph = [sha256(normalizePhone(order.phone))];
+
+  const res = await fetch(
+    `https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data: [
+          {
+            event_name: "Purchase",
+            event_time: Math.floor(Date.now() / 1000),
+            action_source: "website",
+            user_data: userData,
+            custom_data: {
+              currency: order.currency,
+              value: Number(order.total_price),
+              contents: order.line_items.map((item) => ({
+                id: item.id,
+                quantity: item.quantity,
+                item_price: Number(item.price),
+              })),
+            },
+          },
+        ],
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    console.error("Meta Conversions API request failed", res.status);
+  }
+}
+
+export async function handleOrderCreated(
+  req: NextRequest,
+): Promise<NextResponse> {
+  const rawBody = await req.text();
+  const hmacHeader = req.headers.get("x-shopify-hmac-sha256");
+
+  if (!isValidShopifyHmac(rawBody, hmacHeader)) {
+    console.error("Invalid Shopify webhook HMAC signature.");
+    return NextResponse.json({ status: 401 });
+  }
+
+  const order = JSON.parse(rawBody) as OrderPayload;
+
+  const results = await Promise.allSettled([
+    sendGA4Purchase(order),
+    sendMetaPurchase(order),
+  ]);
+
+  results.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error("Purchase tracking send failed", result.reason);
+    }
+  });
+
+  return NextResponse.json({ status: 200 });
+}
