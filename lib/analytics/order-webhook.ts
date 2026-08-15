@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "crypto";
-import { gtmServerUrl } from "lib/site-config";
+import { gtmServerUrl, siteUrl } from "lib/site-config";
 import { NextRequest, NextResponse } from "next/server";
 
 type OrderLineItem = {
@@ -113,6 +113,7 @@ async function sendMetaPurchase(order: OrderPayload) {
           {
             event_name: "Purchase",
             event_time: Math.floor(Date.now() / 1000),
+            event_source_url: siteUrl,
             action_source: "website",
             user_data: userData,
             custom_data: {
