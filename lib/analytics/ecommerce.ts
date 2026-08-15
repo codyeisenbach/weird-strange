@@ -52,6 +52,10 @@ export function trackRemoveFromCart(item: CartItem) {
   });
 }
 
+export function trackSearch(searchTerm: string) {
+  sendGTMEvent({ event: "search", search_term: searchTerm });
+}
+
 export function trackBeginCheckout(cart: Cart) {
   pushEcommerceEvent("begin_checkout", {
     currency: cart.cost.totalAmount.currencyCode,

@@ -2,6 +2,7 @@ import Grid from "components/grid";
 import ProductGridItems from "components/layout/product-grid-items";
 import { defaultSort, sorting } from "lib/constants";
 import { getProducts } from "lib/shopify";
+import { SearchTracker } from "./search-tracker";
 
 export const metadata = {
   title: "Search",
@@ -19,22 +20,9 @@ export default async function SearchPage(props: {
   const products = await getProducts({ sortKey, reverse, query: searchValue });
   const resultsText = products.length > 1 ? "results" : "result";
 
-  const searchEvent = searchValue
-    ? {
-        event: "search",
-        search_term: searchValue,
-      }
-    : null;
-
   return (
     <>
-      {searchEvent && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || []; window.dataLayer.push(${JSON.stringify(searchEvent)});`,
-          }}
-        />
-      )}
+      {searchValue && <SearchTracker searchTerm={searchValue} />}
       {searchValue ? (
         <p className="mb-4">
           {products.length === 0
