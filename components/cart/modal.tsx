@@ -12,8 +12,7 @@ import { createUrl } from "lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { createCartAndSetCookie, redirectToCheckout } from "./actions";
+import { createCartAndSetCookie } from "./actions";
 import { useCart } from "./cart-context";
 import { DeleteItemButton } from "./delete-item-button";
 import { EditItemQuantityButton } from "./edit-item-quantity-button";
@@ -221,9 +220,7 @@ export default function CartModal() {
                       />
                     </div>
                   </div>
-                  <form action={redirectToCheckout}>
-                    <CheckoutButton cart={cart} />
-                  </form>
+                  <CheckoutButton cart={cart} />
                 </div>
               )}
             </Dialog.Panel>
@@ -248,16 +245,23 @@ function CloseCart({ className }: { className?: string }) {
 }
 
 function CheckoutButton({ cart }: { cart: Cart | undefined }) {
-  const { pending } = useFormStatus();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   return (
     <button
       className="block w-full rounded-full bg-ws-charcoal p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
-      type="submit"
-      disabled={pending}
-      onClick={() => cart && trackBeginCheckout(cart)}
+      type="button"
+      disabled={isRedirecting}
+      onClick={() => {
+        if (!cart) return;
+        setIsRedirecting(true);
+        trackBeginCheckout(cart);
+        setTimeout(() => {
+          window.location.href = cart.checkoutUrl;
+        }, 300);
+      }}
     >
-      {pending ? <LoadingDots className="bg-white" /> : "Proceed to Checkout"}
+      {isRedirecting ? <LoadingDots className="bg-white" /> : "Proceed to Checkout"}
     </button>
   );
 }
