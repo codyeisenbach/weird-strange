@@ -19,8 +19,22 @@ export default async function SearchPage(props: {
   const products = await getProducts({ sortKey, reverse, query: searchValue });
   const resultsText = products.length > 1 ? "results" : "result";
 
+  const searchEvent = searchValue
+    ? {
+        event: "search",
+        search_term: searchValue,
+      }
+    : null;
+
   return (
     <>
+      {searchEvent && (
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || []; window.dataLayer.push(${JSON.stringify(searchEvent)});`,
+          }}
+        />
+      )}
       {searchValue ? (
         <p className="mb-4">
           {products.length === 0
