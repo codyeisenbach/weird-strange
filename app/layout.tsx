@@ -44,7 +44,7 @@ export default async function RootLayout({
       <body className="bg-ws-cream flex justify-center flex-col w-full text-ws-charcoal selection:bg-teal-300 dark:selection:bg-pink-500 dark:selection:text-white">
         <GoogleTagManager
           gtmId="GTM-N99WWR99"
-          gtmScriptUrl="https://data.weirdstrange.com/gtm.js"
+          gtmScriptUrl="https://server-side-tagging-940930689537.us-central1.run.app/gtm.js"
         />
         <CartProvider cartPromise={cart}>
           <SaleBanner />
