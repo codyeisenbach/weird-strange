@@ -1,4 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from "crypto";
+import { gtmServerUrl } from "lib/site-config";
 import { NextRequest, NextResponse } from "next/server";
 
 type OrderLineItem = {
@@ -58,7 +59,7 @@ async function sendGA4Purchase(order: OrderPayload) {
   const clientId = `${order.id}.${order.id}`;
 
   const res = await fetch(
-    `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
+    `${gtmServerUrl}/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
