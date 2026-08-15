@@ -148,7 +148,7 @@ export async function handleOrderCreated(
 
   if (!isValidShopifyHmac(rawBody, hmacHeader)) {
     console.error("Invalid Shopify webhook HMAC signature.");
-    return NextResponse.json({ status: 401 });
+    return NextResponse.json({ status: 401 }, { status: 401 });
   }
 
   const order = JSON.parse(rawBody) as OrderPayload;
