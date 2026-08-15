@@ -42,7 +42,10 @@ export default async function RootLayout({
         <JsonLd data={[buildOrganizationJsonLd(), buildWebSiteJsonLd()]} />
       </head>
       <body className="bg-ws-cream flex justify-center flex-col w-full text-ws-charcoal selection:bg-teal-300 dark:selection:bg-pink-500 dark:selection:text-white">
-        <GoogleTagManager gtmId="GTM-N99WWR99" />
+        <GoogleTagManager
+          gtmId="GTM-N99WWR99"
+          gtmScriptUrl="https://data.weirdstrange.com/gtm.js"
+        />
         <CartProvider cartPromise={cart}>
           <SaleBanner />
           <Navbar />
