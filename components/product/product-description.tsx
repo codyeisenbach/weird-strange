@@ -1,8 +1,9 @@
 import { AddToCart } from "components/cart/add-to-cart";
 import Price from "components/price";
 import Prose from "components/prose";
-import { Product } from "lib/shopify/types";
+import { Product, ProductVariant } from "lib/shopify/types";
 import { VariantSelector } from "./variant-selector";
+import { ViewItemTracker } from "./view-item-tracker";
 
 export function ProductHeader({ product }: { product: Product }) {
   const price = product.priceRange.maxVariantPrice;
@@ -32,9 +33,16 @@ export function ProductHeader({ product }: { product: Product }) {
   );
 }
 
-export function ProductDescription({ product }: { product: Product }) {
+export function ProductDescription({
+  product,
+  selectedVariant,
+}: {
+  product: Product;
+  selectedVariant?: ProductVariant;
+}) {
   return (
     <>
+      <ViewItemTracker product={product} variant={selectedVariant} />
       <VariantSelector options={product.options} variants={product.variants} />
       {product.descriptionHtml ? (
         <Prose

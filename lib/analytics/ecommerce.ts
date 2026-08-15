@@ -6,6 +6,22 @@ function pushEcommerceEvent(event: string, ecommerce: Record<string, unknown>) {
   sendGTMEvent({ event, ecommerce });
 }
 
+export function trackViewItem(product: Product, variant?: ProductVariant) {
+  const price = variant?.price ?? product.priceRange.minVariantPrice;
+  pushEcommerceEvent("view_item", {
+    currency: price.currencyCode,
+    value: Number(price.amount),
+    items: [
+      {
+        item_id: variant?.sku || product.id,
+        item_name: product.title,
+        item_variant: variant?.title,
+        price: Number(price.amount),
+      },
+    ],
+  });
+}
+
 export function trackAddToCart(variant: ProductVariant, product: Product) {
   pushEcommerceEvent("add_to_cart", {
     currency: variant.price.currencyCode,

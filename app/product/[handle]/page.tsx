@@ -112,31 +112,9 @@ export default async function ProductPage(props: {
     { name: product.title, url: productUrl },
   ]);
 
-  const viewItemPrice = selectedVariant?.price ?? product.priceRange.minVariantPrice;
-  const viewItemEvent = {
-    event: "view_item",
-    ecommerce: {
-      currency: viewItemPrice.currencyCode,
-      value: Number(viewItemPrice.amount),
-      items: [
-        {
-          item_id: selectedVariant?.sku || product.id,
-          item_name: product.title,
-          item_variant: selectedVariant?.title,
-          price: Number(viewItemPrice.amount),
-        },
-      ],
-    },
-  };
-
   return (
     <>
       <JsonLd data={[productJsonLd, breadcrumbJsonLd]} />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.dataLayer = window.dataLayer || []; window.dataLayer.push({ ecommerce: null }); window.dataLayer.push(${JSON.stringify(viewItemEvent)});`,
-        }}
-      />
       <div className="mx-auto w-full max-w-(--breakpoint-2xl) px-1 md:px-4">
         <div className="flex flex-col bg-ws-cream px-4 py-2 text-ws-charcoal md:p-12 lg:flex-row lg:gap-24">
           <div className="lg:hidden">
@@ -163,7 +141,10 @@ export default async function ProductPage(props: {
               <ProductHeader product={product} />
             </div>
             <Suspense fallback={null}>
-              <ProductDescription product={product} />
+              <ProductDescription
+                product={product}
+                selectedVariant={selectedVariant}
+              />
             </Suspense>
           </div>
         </div>
