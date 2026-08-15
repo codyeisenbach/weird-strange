@@ -131,7 +131,11 @@ async function sendMetaPurchase(order: OrderPayload) {
   );
 
   if (!res.ok) {
-    console.error("Meta Conversions API request failed", res.status);
+    console.error(
+      "Meta Conversions API request failed",
+      res.status,
+      await res.text(),
+    );
   }
 }
 
