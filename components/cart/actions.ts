@@ -99,13 +99,8 @@ export async function updateItemQuantity(
 export async function updateCartAttributesAction(
   attributes: { key: string; value: string }[]
 ) {
-  console.log("[updateCartAttributesAction debug] invoked with", attributes);
   try {
-    const cart = await updateCartAttributes(attributes);
-    console.log(
-      "[updateCartAttributesAction debug] success, cart.attributes now:",
-      cart.attributes
-    );
+    await updateCartAttributes(attributes);
   } catch (e) {
     console.error("Error updating cart attributes", e);
   }
