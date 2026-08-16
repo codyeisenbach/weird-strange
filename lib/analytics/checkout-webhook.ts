@@ -53,6 +53,14 @@ export async function handleCheckoutCreated(
     return NextResponse.json({ status: 200 });
   }
 
+  if (!checkout.id) {
+    console.error(
+      "Checkout webhook payload missing id; raw body:",
+      rawBody.slice(0, 2000),
+    );
+    return NextResponse.json({ status: 200 });
+  }
+
   const supabase = getSupabaseServerClient();
   const { error } = await supabase.from("abandoned_checkouts").upsert({
     id: checkout.id,
