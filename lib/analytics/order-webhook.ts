@@ -162,6 +162,9 @@ async function sendRedditPurchase(order: OrderPayload) {
   const rdtUuid = order.note_attributes
     ?.find((a) => a.name === "_rdt_uuid")
     ?.value.split(".")[1];
+  const rdtCid = order.note_attributes?.find(
+    (a) => a.name === "_rdt_cid",
+  )?.value;
   const isRfc4122Uuid = (value: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       value,
@@ -192,6 +195,7 @@ async function sendRedditPurchase(order: OrderPayload) {
           {
             event_at: new Date().toISOString(),
             event_type: { tracking_type: "Purchase" },
+            ...(rdtCid ? { click_id: rdtCid } : {}),
             event_metadata: {
               currency: order.currency,
               value_decimal: Number(order.total_price),

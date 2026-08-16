@@ -261,10 +261,12 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
         const fbp = getCookie("_fbp");
         const fbc = getCookie("_fbc");
         const rdtUuid = getCookie("_rdt_uuid");
+        const rdtCid = getCookie("_rdt_cid");
         const attributes = [
           ...(fbp ? [{ key: "_fbp", value: fbp }] : []),
           ...(fbc ? [{ key: "_fbc", value: fbc }] : []),
           ...(rdtUuid ? [{ key: "_rdt_uuid", value: rdtUuid }] : []),
+          ...(rdtCid ? [{ key: "_rdt_cid", value: rdtCid }] : []),
         ];
 
         if (attributes.length > 0) {

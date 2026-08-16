@@ -4,6 +4,7 @@ import { Navbar } from "components/layout/navbar";
 import { SaleBanner } from "components/layout/sale-banner";
 import { JsonLd } from "components/seo/json-ld";
 import { GeistSans } from "geist/font/sans";
+import { CaptureClickIds } from "lib/analytics/capture-click-ids";
 import { getCart } from "lib/shopify";
 import {
   buildOrganizationJsonLd,
@@ -46,6 +47,7 @@ export default async function RootLayout({
           gtmId="GTM-N99WWR99"
           gtmScriptUrl="https://data.weirdstrange.com/gtm.js"
         />
+        <CaptureClickIds />
         <CartProvider cartPromise={cart}>
           <SaleBanner />
           <Navbar />
