@@ -110,6 +110,9 @@ async function sendMetaPurchase(order: OrderPayload) {
   const fbc = order.note_attributes?.find((a) => a.name === "_fbc")?.value;
   if (fbp) userData.fbp = fbp;
   if (fbc) userData.fbc = fbc;
+  if (order.browser_ip) userData.client_ip_address = order.browser_ip;
+  if (order.client_details?.user_agent)
+    userData.client_user_agent = order.client_details.user_agent;
 
   const res = await fetch(
     `https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`,
