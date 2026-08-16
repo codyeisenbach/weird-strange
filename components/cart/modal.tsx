@@ -265,6 +265,8 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
           ...(fbc ? [{ key: "_fbc", value: fbc }] : []),
         ];
 
+        console.log("[checkout debug]", { fbp, fbc, attributes });
+
         if (attributes.length > 0) {
           await Promise.race([
             updateCartAttributesAction(attributes),
