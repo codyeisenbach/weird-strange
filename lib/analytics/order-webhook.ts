@@ -118,6 +118,7 @@ async function sendMetaPurchase(order: OrderPayload) {
         data: [
           {
             event_name: "Purchase",
+            event_id: order.id,
             event_time: Math.floor(Date.now() / 1000),
             event_source_url: siteUrl,
             action_source: "website",
@@ -188,6 +189,7 @@ async function sendRedditPurchase(order: OrderPayload) {
             event_metadata: {
               currency: order.currency,
               value_decimal: Number(order.total_price),
+              conversion_id: order.id,
               products: order.line_items.map((item) => ({
                 id: item.id,
                 name: item.title,

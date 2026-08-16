@@ -260,7 +260,8 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
 
         const fbp = getCookie("_fbp");
         const fbc = getCookie("_fbc");
-        const rdtUuid = getCookie("_rdt_uuid");
+        // _rdt_uuid cookie value is "<timestamp>.<uuid>"; Reddit's CAPI only accepts the UUID part.
+        const rdtUuid = getCookie("_rdt_uuid")?.split(".")[1];
         const attributes = [
           ...(fbp ? [{ key: "_fbp", value: fbp }] : []),
           ...(fbc ? [{ key: "_fbc", value: fbc }] : []),
