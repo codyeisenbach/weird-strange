@@ -262,11 +262,14 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
         const fbc = getCookie("_fbc");
         const rdtUuid = getCookie("_rdt_uuid");
         const rdtCid = getCookie("_rdt_cid");
+        // _ga cookie is "GA1.1.<id1>.<id2>"; GA4's client_id is "<id1>.<id2>".
+        const gaClientId = getCookie("_ga")?.split(".").slice(-2).join(".");
         const attributes = [
           ...(fbp ? [{ key: "_fbp", value: fbp }] : []),
           ...(fbc ? [{ key: "_fbc", value: fbc }] : []),
           ...(rdtUuid ? [{ key: "_rdt_uuid", value: rdtUuid }] : []),
           ...(rdtCid ? [{ key: "_rdt_cid", value: rdtCid }] : []),
+          ...(gaClientId ? [{ key: "_ga_client_id", value: gaClientId }] : []),
         ];
 
         if (attributes.length > 0) {

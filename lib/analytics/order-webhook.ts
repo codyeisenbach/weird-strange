@@ -59,7 +59,10 @@ async function sendGA4Purchase(order: OrderPayload) {
     return;
   }
 
-  const clientId = `${order.id}.${order.id}`;
+  const gaClientId = order.note_attributes?.find(
+    (a) => a.name === "_ga_client_id",
+  )?.value;
+  const clientId = gaClientId || `${order.id}.${order.id}`;
 
   const res = await fetch(
     `${gtmServerUrl}/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
