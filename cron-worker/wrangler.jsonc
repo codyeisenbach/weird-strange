@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "weird-strange-abandoned-checkout-cron",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-16",
+
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+
+  "vars": {
+    "CRON_TARGET_URL": "https://webhooks.weirdstrange.com/api/cron/abandoned-checkout-reminder"
+  }
+
+  // CRON_SECRET is a secret, not a var — set it after first deploy with:
+  //   npx wrangler secret put CRON_SECRET
+  // (must match the CRON_SECRET env var configured on the Vercel project)
+}
