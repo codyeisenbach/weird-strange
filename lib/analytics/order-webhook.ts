@@ -20,7 +20,7 @@ type OrderPayload = {
   note_attributes?: { name: string; value: string }[];
   browser_ip?: string;
   client_details?: { user_agent?: string };
-  checkout_id?: string | number;
+  checkout_token?: string;
 };
 
 function normalizeEmail(email: string) {
@@ -230,13 +230,13 @@ async function sendRedditPurchase(order: OrderPayload) {
 }
 
 async function markAbandonedCheckoutCompleted(order: OrderPayload) {
-  if (!order.checkout_id) return;
+  if (!order.checkout_token) return;
 
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("abandoned_checkouts")
     .update({ order_id: String(order.id) })
-    .eq("id", order.checkout_id);
+    .eq("id", order.checkout_token);
 
   if (error) {
     console.error(

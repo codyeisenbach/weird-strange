@@ -3,17 +3,18 @@ import { getSupabaseServerClient } from "lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 type CheckoutLineItem = {
-  id: string | number;
+  key: string;
   title: string;
   price: string;
+  line_price: string;
   quantity: number;
 };
 
 type CheckoutPayload = {
-  id: string | number;
+  token: string;
   email?: string;
   currency: string;
-  total_price: string;
+  total_price?: string;
   line_items: CheckoutLineItem[];
   abandoned_checkout_url: string;
   created_at: string;
@@ -53,20 +54,23 @@ export async function handleCheckoutCreated(
     return NextResponse.json({ status: 200 });
   }
 
-  if (!checkout.id) {
-    console.error(
-      "Checkout webhook payload missing id; raw body:",
-      rawBody.slice(0, 2000),
-    );
+  if (!checkout.token) {
+    console.error("Checkout webhook payload missing token; raw body:", rawBody);
     return NextResponse.json({ status: 200 });
   }
 
+  const totalPrice =
+    checkout.total_price ??
+    checkout.line_items
+      .reduce((sum, item) => sum + parseFloat(item.line_price), 0)
+      .toFixed(2);
+
   const supabase = getSupabaseServerClient();
   const { error } = await supabase.from("abandoned_checkouts").upsert({
-    id: checkout.id,
+    id: checkout.token,
     email: checkout.email,
     checkout_url: checkout.abandoned_checkout_url,
-    total_price: checkout.total_price,
+    total_price: totalPrice,
     currency: checkout.currency,
     line_items: checkout.line_items,
     created_at: checkout.created_at,

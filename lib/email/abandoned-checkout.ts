@@ -2,14 +2,13 @@ import { siteName, siteUrl } from "lib/site-config";
 import { getResendClient } from "lib/email/resend";
 
 type AbandonedCheckoutLineItem = {
-  id: string | number;
   title: string;
   price: string;
   quantity: number;
 };
 
 export type AbandonedCheckout = {
-  id: number;
+  id: string;
   email: string;
   checkout_url: string;
   total_price: string | null;
