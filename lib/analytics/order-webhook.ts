@@ -10,7 +10,7 @@ type OrderLineItem = {
 };
 
 type OrderPayload = {
-  id: string;
+  id: string | number;
   email?: string;
   phone?: string;
   currency: string;
@@ -70,7 +70,7 @@ async function sendGA4Purchase(order: OrderPayload) {
           {
             name: "purchase",
             params: {
-              transaction_id: order.id,
+              transaction_id: String(order.id),
               value: Number(order.total_price),
               currency: order.currency,
               items: order.line_items.map((item) => ({
@@ -118,7 +118,7 @@ async function sendMetaPurchase(order: OrderPayload) {
         data: [
           {
             event_name: "Purchase",
-            event_id: order.id,
+            event_id: String(order.id),
             event_time: Math.floor(Date.now() / 1000),
             event_source_url: siteUrl,
             action_source: "website",
@@ -190,7 +190,7 @@ async function sendRedditPurchase(order: OrderPayload) {
             event_metadata: {
               currency: order.currency,
               value_decimal: Number(order.total_price),
-              conversion_id: order.id,
+              conversion_id: String(order.id),
               products: order.line_items.map((item) => ({
                 id: item.id,
                 name: item.title,
