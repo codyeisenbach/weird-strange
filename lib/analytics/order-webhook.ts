@@ -3,7 +3,7 @@ import { gtmServerUrl, siteUrl } from "lib/site-config";
 import { NextRequest, NextResponse } from "next/server";
 
 type OrderLineItem = {
-  id: string;
+  id: string | number;
   title: string;
   price: string;
   quantity: number;
@@ -74,7 +74,7 @@ async function sendGA4Purchase(order: OrderPayload) {
               value: Number(order.total_price),
               currency: order.currency,
               items: order.line_items.map((item) => ({
-                item_id: item.id,
+                item_id: String(item.id),
                 item_name: item.title,
                 price: Number(item.price),
                 quantity: item.quantity,
@@ -127,7 +127,7 @@ async function sendMetaPurchase(order: OrderPayload) {
               currency: order.currency,
               value: Number(order.total_price),
               contents: order.line_items.map((item) => ({
-                id: item.id,
+                id: String(item.id),
                 quantity: item.quantity,
                 item_price: Number(item.price),
               })),
@@ -192,7 +192,7 @@ async function sendRedditPurchase(order: OrderPayload) {
               value_decimal: Number(order.total_price),
               conversion_id: String(order.id),
               products: order.line_items.map((item) => ({
-                id: item.id,
+                id: String(item.id),
                 name: item.title,
               })),
             },
