@@ -268,10 +268,15 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
         console.log("[checkout debug]", { fbp, fbc, attributes });
 
         if (attributes.length > 0) {
+          console.log("[checkout debug] calling updateCartAttributesAction");
           await Promise.race([
-            updateCartAttributesAction(attributes),
-            new Promise((resolve) => setTimeout(resolve, 1500)),
-          ]).catch(() => {});
+            updateCartAttributesAction(attributes).then(() =>
+              console.log("[checkout debug] action resolved"),
+            ),
+            new Promise((resolve) => setTimeout(resolve, 1500)).then(() =>
+              console.log("[checkout debug] timeout won the race"),
+            ),
+          ]).catch((e) => console.log("[checkout debug] action threw", e));
         }
 
         window.location.href = cart.checkoutUrl;
