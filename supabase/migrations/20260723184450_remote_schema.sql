@@ -1,0 +1,6 @@
+-- Placeholder to reconcile CLI migration history: this timestamp was
+-- recorded on the remote database (likely from a dashboard-applied change)
+-- with no corresponding local file. Its actual schema effect is already
+-- captured by 20260723185925_remote_schema.sql, confirmed by comparing
+-- against the live public schema (artist_products, artist_publications,
+-- artists, publication_products, publications all match).

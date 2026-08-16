@@ -1,5 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from "crypto";
 import { gtmServerUrl, siteUrl } from "lib/site-config";
+import { getSupabaseServerClient } from "lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 type OrderLineItem = {
@@ -19,6 +20,7 @@ type OrderPayload = {
   note_attributes?: { name: string; value: string }[];
   browser_ip?: string;
   client_details?: { user_agent?: string };
+  checkout_id?: string | number;
 };
 
 function normalizeEmail(email: string) {
@@ -227,6 +229,23 @@ async function sendRedditPurchase(order: OrderPayload) {
   }
 }
 
+async function markAbandonedCheckoutCompleted(order: OrderPayload) {
+  if (!order.checkout_id) return;
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("abandoned_checkouts")
+    .update({ order_id: String(order.id) })
+    .eq("id", order.checkout_id);
+
+  if (error) {
+    console.error(
+      "Failed to mark abandoned checkout completed:",
+      error.message,
+    );
+  }
+}
+
 export async function handleOrderCreated(
   req: NextRequest,
 ): Promise<NextResponse> {
@@ -244,6 +263,7 @@ export async function handleOrderCreated(
     sendGA4Purchase(order),
     sendMetaPurchase(order),
     sendRedditPurchase(order),
+    markAbandonedCheckoutCompleted(order),
   ]);
 
   results.forEach((result) => {
