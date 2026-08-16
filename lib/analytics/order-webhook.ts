@@ -146,6 +146,63 @@ async function sendMetaPurchase(order: OrderPayload) {
   }
 }
 
+async function sendRedditPurchase(order: OrderPayload) {
+  const pixelId = process.env.REDDIT_PIXEL_ID;
+  const accessToken = process.env.REDDIT_CAPI_ACCESS_TOKEN;
+
+  if (!pixelId || !accessToken) {
+    console.error("Reddit Conversions API env vars are not configured.");
+    return;
+  }
+
+  const rdtUuid = order.note_attributes?.find(
+    (a) => a.name === "_rdt_uuid",
+  )?.value;
+
+  const userData: Record<string, string> = {};
+  if (order.email) userData.email = sha256(normalizeEmail(order.email));
+  if (order.phone) userData.phone_number = sha256(normalizePhone(order.phone));
+  if (rdtUuid) userData.uuid = rdtUuid;
+
+  const res = await fetch(
+    `https://ads-api.reddit.com/api/v2.0/conversions/events/${pixelId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        test_mode: false,
+        events: [
+          {
+            event_at: new Date().toISOString(),
+            event_type: { tracking_type: "Purchase" },
+            event_source_url: siteUrl,
+            event_metadata: {
+              currency: order.currency,
+              value_decimal: Number(order.total_price),
+              products: order.line_items.map((item) => ({
+                id: item.id,
+                name: item.title,
+              })),
+            },
+            user: userData,
+          },
+        ],
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    console.error(
+      "Reddit Conversions API request failed",
+      res.status,
+      await res.text(),
+    );
+  }
+}
+
 export async function handleOrderCreated(
   req: NextRequest,
 ): Promise<NextResponse> {
@@ -162,6 +219,7 @@ export async function handleOrderCreated(
   const results = await Promise.allSettled([
     sendGA4Purchase(order),
     sendMetaPurchase(order),
+    sendRedditPurchase(order),
   ]);
 
   results.forEach((result) => {
