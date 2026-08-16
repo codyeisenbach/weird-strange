@@ -177,7 +177,8 @@ async function sendRedditPurchase(order: OrderPayload) {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        ...(process.env.REDDIT_CAPI_TEST_ID
+        ...(process.env.VERCEL_ENV !== "production" &&
+        process.env.REDDIT_CAPI_TEST_ID
           ? { test_id: process.env.REDDIT_CAPI_TEST_ID }
           : {}),
         events: [
