@@ -16,6 +16,7 @@ type OrderPayload = {
   currency: string;
   total_price: string;
   line_items: OrderLineItem[];
+  note_attributes?: { name: string; value: string }[];
 };
 
 function normalizeEmail(email: string) {
@@ -99,9 +100,14 @@ async function sendMetaPurchase(order: OrderPayload) {
     return;
   }
 
-  const userData: Record<string, string[]> = {};
+  const userData: Record<string, string[] | string> = {};
   if (order.email) userData.em = [sha256(normalizeEmail(order.email))];
   if (order.phone) userData.ph = [sha256(normalizePhone(order.phone))];
+
+  const fbp = order.note_attributes?.find((a) => a.name === "_fbp")?.value;
+  const fbc = order.note_attributes?.find((a) => a.name === "_fbc")?.value;
+  if (fbp) userData.fbp = fbp;
+  if (fbc) userData.fbc = fbc;
 
   const res = await fetch(
     `https://graph.facebook.com/v21.0/${pixelId}/events?access_token=${accessToken}`,

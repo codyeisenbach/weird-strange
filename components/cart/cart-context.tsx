@@ -120,6 +120,7 @@ function createEmptyCart(): Cart {
   return {
     id: undefined,
     checkoutUrl: "",
+    attributes: [],
     totalQuantity: 0,
     lines: [],
     cost: {

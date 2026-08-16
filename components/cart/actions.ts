@@ -7,6 +7,7 @@ import {
   getCart,
   removeFromCart,
   updateCart,
+  updateCartAttributes,
 } from "lib/shopify";
 import { updateTag } from "next/cache";
 import { cookies } from "next/headers";
@@ -92,6 +93,16 @@ export async function updateItemQuantity(
   } catch (e) {
     console.error(e);
     return "Error updating item quantity";
+  }
+}
+
+export async function updateCartAttributesAction(
+  attributes: { key: string; value: string }[]
+) {
+  try {
+    await updateCartAttributes(attributes);
+  } catch (e) {
+    console.error("Error updating cart attributes", e);
   }
 }
 

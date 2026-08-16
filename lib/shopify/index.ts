@@ -17,6 +17,7 @@ import {
   createCartMutation,
   editCartItemsMutation,
   removeFromCartMutation,
+  updateCartAttributesMutation,
 } from "./mutations/cart";
 import { getCartQuery } from "./queries/cart";
 import {
@@ -55,6 +56,7 @@ import {
   ShopifyProductRecommendationsOperation,
   ShopifyProductsOperation,
   ShopifyRemoveFromCartOperation,
+  ShopifyUpdateCartAttributesOperation,
   ShopifyUpdateCartOperation,
 } from "./types";
 
@@ -298,6 +300,21 @@ export async function updateCart(
   });
 
   return reshapeCart(res.body.data.cartLinesUpdate.cart);
+}
+
+export async function updateCartAttributes(
+  attributes: { key: string; value: string }[]
+): Promise<Cart> {
+  const cartId = (await cookies()).get("cartId")?.value!;
+  const res = await shopifyFetch<ShopifyUpdateCartAttributesOperation>({
+    query: updateCartAttributesMutation,
+    variables: {
+      cartId,
+      attributes,
+    },
+  });
+
+  return reshapeCart(res.body.data.cartAttributesUpdate.cart);
 }
 
 export async function getCart(): Promise<Cart | undefined> {

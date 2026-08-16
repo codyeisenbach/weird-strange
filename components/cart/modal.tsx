@@ -6,13 +6,14 @@ import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import LoadingDots from "components/loading-dots";
 import Price from "components/price";
 import { DEFAULT_OPTION } from "lib/constants";
+import { getCookie } from "lib/analytics/cookies";
 import { trackBeginCheckout } from "lib/analytics/ecommerce";
 import type { Cart } from "lib/shopify/types";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { createCartAndSetCookie } from "./actions";
+import { createCartAndSetCookie, updateCartAttributesAction } from "./actions";
 import { useCart } from "./cart-context";
 import { DeleteItemButton } from "./delete-item-button";
 import { EditItemQuantityButton } from "./edit-item-quantity-button";
@@ -252,13 +253,26 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
       className="block w-full rounded-full bg-ws-charcoal p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
       type="button"
       disabled={isRedirecting}
-      onClick={() => {
+      onClick={async () => {
         if (!cart) return;
         setIsRedirecting(true);
         trackBeginCheckout(cart);
-        setTimeout(() => {
-          window.location.href = cart.checkoutUrl;
-        }, 300);
+
+        const fbp = getCookie("_fbp");
+        const fbc = getCookie("_fbc");
+        const attributes = [
+          ...(fbp ? [{ key: "_fbp", value: fbp }] : []),
+          ...(fbc ? [{ key: "_fbc", value: fbc }] : []),
+        ];
+
+        if (attributes.length > 0) {
+          await Promise.race([
+            updateCartAttributesAction(attributes),
+            new Promise((resolve) => setTimeout(resolve, 1500)),
+          ]).catch(() => {});
+        }
+
+        window.location.href = cart.checkoutUrl;
       }}
     >
       {isRedirecting ? <LoadingDots className="bg-white" /> : "Proceed to Checkout"}
