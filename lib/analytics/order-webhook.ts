@@ -156,9 +156,10 @@ async function sendRedditPurchase(order: OrderPayload) {
     return;
   }
 
-  const rdtUuid = order.note_attributes?.find(
-    (a) => a.name === "_rdt_uuid",
-  )?.value;
+  // _rdt_uuid cookie value is "<timestamp>.<uuid>"; Reddit's CAPI only accepts the UUID part.
+  const rdtUuid = order.note_attributes
+    ?.find((a) => a.name === "_rdt_uuid")
+    ?.value.split(".")[1];
   const isRfc4122Uuid = (value: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       value,
