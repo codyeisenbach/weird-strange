@@ -17,6 +17,8 @@ type OrderPayload = {
   total_price: string;
   line_items: OrderLineItem[];
   note_attributes?: { name: string; value: string }[];
+  browser_ip?: string;
+  client_details?: { user_agent?: string };
 };
 
 function normalizeEmail(email: string) {
@@ -169,6 +171,9 @@ async function sendRedditPurchase(order: OrderPayload) {
   if (order.email) userData.email = sha256(normalizeEmail(order.email));
   if (order.phone) userData.phone_number = sha256(normalizePhone(order.phone));
   if (rdtUuid && isRfc4122Uuid(rdtUuid)) userData.uuid = rdtUuid;
+  if (order.browser_ip) userData.ip_address = order.browser_ip;
+  if (order.client_details?.user_agent)
+    userData.user_agent = order.client_details.user_agent;
 
   const res = await fetch(
     `https://ads-api.reddit.com/api/v2.0/conversions/events/${pixelId}`,
