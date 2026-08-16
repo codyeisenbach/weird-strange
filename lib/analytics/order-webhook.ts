@@ -158,11 +158,15 @@ async function sendRedditPurchase(order: OrderPayload) {
   const rdtUuid = order.note_attributes?.find(
     (a) => a.name === "_rdt_uuid",
   )?.value;
+  const isRfc4122Uuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    );
 
   const userData: Record<string, string> = {};
   if (order.email) userData.email = sha256(normalizeEmail(order.email));
   if (order.phone) userData.phone_number = sha256(normalizePhone(order.phone));
-  if (rdtUuid) userData.uuid = rdtUuid;
+  if (rdtUuid && isRfc4122Uuid(rdtUuid)) userData.uuid = rdtUuid;
 
   const res = await fetch(
     `https://ads-api.reddit.com/api/v2.0/conversions/events/${pixelId}`,
@@ -173,12 +177,13 @@ async function sendRedditPurchase(order: OrderPayload) {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        test_mode: false,
+        ...(process.env.REDDIT_CAPI_TEST_ID
+          ? { test_id: process.env.REDDIT_CAPI_TEST_ID }
+          : {}),
         events: [
           {
             event_at: new Date().toISOString(),
             event_type: { tracking_type: "Purchase" },
-            event_source_url: siteUrl,
             event_metadata: {
               currency: order.currency,
               value_decimal: Number(order.total_price),
