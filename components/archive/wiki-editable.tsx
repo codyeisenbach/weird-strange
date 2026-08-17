@@ -13,6 +13,13 @@ import { ArticleBody } from "./wiki-article";
 // function that builds JSX on demand ("Functions are not valid as a child
 // of Client Components"). So the layout lives here once, directly.
 //
+export type WikiEditableExtraField = {
+  name: string;
+  label: string;
+  initialValue: string;
+  placeholder?: string;
+};
+
 // Only rendered for admins by the caller, but the save action re-checks
 // admin status server-side regardless, since a render-time gate isn't a
 // security boundary on its own.
@@ -26,6 +33,7 @@ export function WikiEditable({
   bodyLabel,
   initialTitle,
   initialBody,
+  extraFields,
   action,
 }: {
   subtitle?: string;
@@ -37,12 +45,20 @@ export function WikiEditable({
   bodyLabel: string;
   initialTitle: string;
   initialBody: string;
+  // Optional extra text inputs rendered above the body textarea (e.g. a
+  // publication's issue date) — artists don't need these, so this stays
+  // undefined/omitted for that caller and WikiEditable renders exactly as
+  // it did before this was added.
+  extraFields?: WikiEditableExtraField[];
   action: (state: EditFormState, formData: FormData) => Promise<EditFormState>;
 }) {
   const [editing, setEditing] = useState(false);
   const [current, setCurrent] = useState({
     title: initialTitle,
     body: initialBody,
+    extraFields: Object.fromEntries(
+      (extraFields ?? []).map((field) => [field.name, field.initialValue]),
+    ) as Record<string, string>,
   });
   const [state, formAction, pending] = useActionState<EditFormState, FormData>(
     action,
@@ -53,7 +69,7 @@ export function WikiEditable({
   // the next render via `state`. Track the values from the in-flight submit
   // so that once it resolves without an error, they can be committed and
   // the form closed.
-  const pendingSubmit = useRef<{ title: string; body: string } | null>(null);
+  const pendingSubmit = useRef<typeof current | null>(null);
 
   useEffect(() => {
     if (pending || !pendingSubmit.current) return;
@@ -69,6 +85,12 @@ export function WikiEditable({
     pendingSubmit.current = {
       title: String(formData.get(titleFieldName) ?? ""),
       body: String(formData.get(bodyFieldName) ?? ""),
+      extraFields: Object.fromEntries(
+        (extraFields ?? []).map((field) => [
+          field.name,
+          String(formData.get(field.name) ?? ""),
+        ]),
+      ),
     };
     formAction(formData);
   };
@@ -101,6 +123,18 @@ export function WikiEditable({
           action={submit}
           className="flex flex-col gap-4 font-sans"
         >
+          {(extraFields ?? []).map((field) => (
+            <label key={field.name} className="flex flex-col gap-1 text-sm">
+              {field.label}
+              <input
+                type="text"
+                name={field.name}
+                defaultValue={current.extraFields[field.name]}
+                placeholder={field.placeholder}
+                className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+              />
+            </label>
+          ))}
           <label className="flex flex-col gap-1 text-sm">
             {bodyLabel}
             <textarea

@@ -46,6 +46,7 @@ type PublicationRow = {
   created_at: string;
   image_path: string | null;
   image_alt: string | null;
+  issue_date: string | null;
 };
 
 type ArtworkRow = {
@@ -108,6 +109,7 @@ const reshapePublication = (row: PublicationRow): Publication => ({
   createdAt: row.created_at,
   imagePath: resolveImagePath(row.image_path),
   imageAlt: row.image_alt,
+  issueDate: row.issue_date,
 });
 
 const reshapeArtwork = (row: ArtworkRow): Artwork => ({
@@ -168,7 +170,7 @@ export async function getPublications(): Promise<Publication[]> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("publications")
-    .select("id, slug, title, created_at, image_path, image_alt")
+    .select("id, slug, title, created_at, image_path, image_alt, issue_date")
     .order("title", { ascending: true });
 
   if (error) {
@@ -220,7 +222,7 @@ async function getArtworksFor(
     .select(
       "id, slug, title, created_at, image_path, image_alt, placement, " +
         "artists(id, slug, name, created_at, image_path, image_alt), " +
-        "publications(id, slug, title, created_at, image_path, image_alt), " +
+        "publications(id, slug, title, created_at, image_path, image_alt, issue_date), " +
         "artwork_products(shopify_product_id)",
     )
     .eq(filterColumn, id)
@@ -327,7 +329,9 @@ export async function getPublication(
 
   const { data: publicationRow, error: publicationError } = await supabase
     .from("publications")
-    .select("id, slug, title, created_at, image_path, image_alt, description")
+    .select(
+      "id, slug, title, created_at, image_path, image_alt, issue_date, description",
+    )
     .eq("slug", slug)
     .maybeSingle();
 
@@ -384,7 +388,7 @@ export async function getArtwork(
     .select(
       "id, slug, title, created_at, image_path, image_alt, placement, description, " +
         "artists(id, slug, name, created_at, image_path, image_alt), " +
-        "publications(id, slug, title, created_at, image_path, image_alt), " +
+        "publications(id, slug, title, created_at, image_path, image_alt, issue_date), " +
         "artwork_products(shopify_product_id)",
     )
     .eq("slug", slug)
@@ -453,7 +457,7 @@ export async function getArtworksForProductHandle(
     .select(
       "id, slug, title, created_at, image_path, image_alt, placement, description, " +
         "artists(id, slug, name, created_at, image_path, image_alt), " +
-        "publications(id, slug, title, created_at, image_path, image_alt), " +
+        "publications(id, slug, title, created_at, image_path, image_alt, issue_date), " +
         "artwork_products!inner(shopify_product_id)",
     )
     .eq("artwork_products.shopify_product_id", handle);
@@ -496,6 +500,7 @@ export type ArtistTextEdit = {
 export type PublicationTextEdit = {
   title: string;
   description: string;
+  issueDate: string;
 };
 
 export type ArtworkEdit = {
@@ -540,7 +545,11 @@ export async function updatePublication(
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("publications")
-    .update({ title: edit.title, description: edit.description || null })
+    .update({
+      title: edit.title,
+      description: edit.description || null,
+      issue_date: edit.issueDate || null,
+    })
     .eq("id", id);
 
   if (error) {

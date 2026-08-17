@@ -19,6 +19,9 @@ export type Publication = ArchiveImage & {
   slug: string;
   title: string;
   createdAt: string;
+  // Free-text issue date, e.g. "Nov 1942", "Fall 42", "1942" — deliberately
+  // unstructured/unvalidated, same convention as Artwork.placement.
+  issueDate: string | null;
 };
 
 export type Artwork = ArchiveImage & {

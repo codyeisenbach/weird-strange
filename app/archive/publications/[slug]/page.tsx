@@ -2,6 +2,7 @@ import { savePublicationEdit } from "app/archive/actions";
 import { GridTileImage } from "components/grid/tile";
 import {
   ArticleBody,
+  InfoboxFact,
   WikiArticle,
   WikiInfobox,
   WikiLink,
@@ -38,47 +39,55 @@ function PublicationInfobox({
 }: {
   publication: PublicationDetail;
 }) {
+  const facts: InfoboxFact[] = [];
+
+  if (publication.issueDate) {
+    facts.push({ label: "Issue date", value: publication.issueDate });
+  }
+
+  facts.push(
+    {
+      label: "Artworks",
+      value:
+        publication.artworks.length > 0 ? (
+          <ul>
+            {publication.artworks.map((artwork) => (
+              <li key={artwork.id}>
+                <WikiLink href={`/archive/artworks/${artwork.slug}`}>
+                  {artwork.title}
+                </WikiLink>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      label: "Artists",
+      value:
+        publication.artists.length > 0 ? (
+          <ul>
+            {publication.artists.map((artist) => (
+              <li key={artist.id}>
+                <WikiLink href={`/archive/artists/${artist.slug}`}>
+                  {artist.name}
+                </WikiLink>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          "—"
+        ),
+    },
+  );
+
   return (
     <WikiInfobox
       title={publication.title}
       src={publication.imagePath}
       alt={publication.imageAlt || publication.title}
-      facts={[
-        {
-          label: "Artworks",
-          value:
-            publication.artworks.length > 0 ? (
-              <ul>
-                {publication.artworks.map((artwork) => (
-                  <li key={artwork.id}>
-                    <WikiLink href={`/archive/artworks/${artwork.slug}`}>
-                      {artwork.title}
-                    </WikiLink>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              "—"
-            ),
-        },
-        {
-          label: "Artists",
-          value:
-            publication.artists.length > 0 ? (
-              <ul>
-                {publication.artists.map((artist) => (
-                  <li key={artist.id}>
-                    <WikiLink href={`/archive/artists/${artist.slug}`}>
-                      {artist.name}
-                    </WikiLink>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              "—"
-            ),
-        },
-      ]}
+      facts={facts}
     />
   );
 }
@@ -156,6 +165,14 @@ export default async function PublicationPage(props: {
           bodyLabel="Description"
           initialTitle={publication.title}
           initialBody={publication.description ?? ""}
+          extraFields={[
+            {
+              name: "issueDate",
+              label: "Issue date",
+              initialValue: publication.issueDate ?? "",
+              placeholder: "e.g. Nov 1942, Fall 42",
+            },
+          ]}
           action={savePublicationEdit.bind(null, publication.id)}
         >
           <PublicationProducts publication={publication} />

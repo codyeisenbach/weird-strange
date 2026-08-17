@@ -43,6 +43,12 @@ function buildArtworkIsBasedOn(artworks: ArtworkDetail[]) {
           "@type": "CreativeWorkSeries",
           name: artwork.publication.title,
           url: `${siteUrl}/archive/publications/${artwork.publication.slug}`,
+          // Free text (e.g. "Nov 1942", "Fall 42"), not strict ISO 8601 —
+          // schema.org's Date properties accept plain Text values, so this
+          // is still valid markup, just not machine-parseable for
+          // date-sensitive rich-result features the way a real ISO date
+          // would be.
+          datePublished: artwork.publication.issueDate || undefined,
         }
       : undefined,
   }));

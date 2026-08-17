@@ -62,6 +62,22 @@ function ArtworkInfobox({ artwork }: { artwork: ArtworkDetail }) {
         </WikiLink>
       ),
     });
+
+    // Issue date belongs to the publication row, not the artwork — shown
+    // here for convenience (front/back cover of the same issue share one
+    // date), but only editable on the publication's own page, linked to
+    // below rather than duplicating an edit control for a row this page
+    // doesn't own.
+    if (artwork.publication.issueDate) {
+      facts.push({
+        label: "Issue date",
+        value: (
+          <WikiLink href={`/archive/publications/${artwork.publication.slug}`}>
+            {artwork.publication.issueDate}
+          </WikiLink>
+        ),
+      });
+    }
   }
 
   if (artwork.placement) {

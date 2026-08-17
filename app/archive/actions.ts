@@ -45,12 +45,13 @@ export async function savePublicationEdit(
 
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const issueDate = String(formData.get("issueDate") ?? "").trim();
 
   if (!title) {
     return { error: "Title is required." };
   }
 
-  return updatePublication(id, { title, description });
+  return updatePublication(id, { title, description, issueDate });
 }
 
 export async function createArtistEntry(
