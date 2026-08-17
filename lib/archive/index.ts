@@ -432,6 +432,62 @@ export async function getArtwork(
   };
 }
 
+// Reverse of every other artwork query in this file — those all start from
+// an artwork/artist/publication and resolve outward to product handles;
+// this starts from a Shopify product handle and resolves back to the
+// artwork(s) that reference it (for embedding artist/publication
+// structured data on the product page). A product isn't expected to be
+// linked from more than one artwork in practice, but the schema (and this
+// return type) allows it, so callers should handle zero, one, or many.
+export async function getArtworksForProductHandle(
+  handle: string,
+): Promise<ArtworkDetail[]> {
+  "use cache";
+  cacheTag(...ALL_ARCHIVE_TAGS);
+  cacheLife("days");
+
+  const supabase = getSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("artworks")
+    .select(
+      "id, slug, title, created_at, image_path, image_alt, placement, description, " +
+        "artists(id, slug, name, created_at, image_path, image_alt), " +
+        "publications(id, slug, title, created_at, image_path, image_alt), " +
+        "artwork_products!inner(shopify_product_id)",
+    )
+    .eq("artwork_products.shopify_product_id", handle);
+
+  if (error) {
+    console.error(
+      `Failed to fetch artworks for product handle '${handle}':`,
+      error.message,
+    );
+    return [];
+  }
+
+  // Same GenericStringError fallback as getArtworksFor()/getArtwork() above.
+  const rows = (data ?? []) as unknown as (ArtworkRow & {
+    description: string | null;
+    artists: ArtistRow | null;
+    publications: PublicationRow | null;
+  })[];
+
+  return rows
+    .filter((row): row is typeof row & { artists: ArtistRow } =>
+      Boolean(row.artists),
+    )
+    .map((row) => ({
+      ...reshapeArtwork(row),
+      description: row.description,
+      artist: reshapeArtist(row.artists),
+      publication: row.publications
+        ? reshapePublication(row.publications)
+        : null,
+      products: [],
+    }));
+}
+
 export type ArtistTextEdit = {
   name: string;
   bio: string;

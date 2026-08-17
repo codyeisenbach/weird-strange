@@ -7,6 +7,7 @@ import {
 } from "components/product/product-description";
 import { HIDDEN_PRODUCT_TAG } from "lib/constants";
 import { siteUrl } from "lib/site-config";
+import { getArtworksForProductHandle } from "lib/archive";
 import { getProduct, getProductRecommendations } from "lib/shopify";
 import {
   buildBreadcrumbJsonLd,
@@ -68,7 +69,10 @@ export default async function ProductPage(props: {
 }) {
   const params = await props.params;
   const searchParams = await props.searchParams;
-  const product = await getProduct(params.handle);
+  const [product, artworks] = await Promise.all([
+    getProduct(params.handle),
+    getArtworksForProductHandle(params.handle),
+  ]);
 
   if (!product) return notFound();
 
@@ -105,7 +109,7 @@ export default async function ProductPage(props: {
     : filteredImages;
 
   const productUrl = `${siteUrl}/product/${product.handle}`;
-  const productJsonLd = buildProductJsonLd(product, productUrl);
+  const productJsonLd = buildProductJsonLd(product, productUrl, artworks);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: siteUrl },
     { name: product.title, url: productUrl },
