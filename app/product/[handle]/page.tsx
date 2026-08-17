@@ -15,8 +15,9 @@ import {
 } from "lib/shopify/structured-data";
 import type { Image } from "lib/shopify/types";
 import {
-  getColorFromAltText,
+  getColorImage,
   getColorOption,
+  getDefaultColor,
   getVariantSearchParams,
   isColorTagged,
   matchesColor,
@@ -99,11 +100,22 @@ export default async function ProductPage(props: {
       )
     : product.images;
 
-  const galleryImages = selectedVariant?.image
+  // A variant with no image of its own falls back to the product's
+  // featuredImage from the Storefront API, so exclude that case here —
+  // otherwise every imageless variant would appear to "own" featuredImage
+  // and dedupe it out of the rest of the gallery.
+  const selectedVariantImage =
+    selectedVariant?.image?.url === product.featuredImage?.url
+      ? undefined
+      : selectedVariant?.image;
+
+  const galleryImages = selectedVariantImage
     ? [
-        selectedVariant.image,
-        ...filteredImages.filter(
-          (image) => image.url !== selectedVariant.image?.url,
+        selectedVariantImage,
+        ...filteredImages.filter((image) =>
+          selectedVariantImage.id
+            ? image.id !== selectedVariantImage.id
+            : image.url !== selectedVariantImage.url,
         ),
       ]
     : filteredImages;
@@ -167,14 +179,13 @@ async function RelatedProducts({ id }: { id: string }) {
       <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
         {relatedProducts.map((product) => {
-          const color = getColorFromAltText(
-            product,
-            product.featuredImage?.altText,
-          );
+          const color = getDefaultColor(product);
           const variantParams = getVariantSearchParams(product, color);
           const href = variantParams
             ? `/product/${product.handle}?${variantParams}`
             : `/product/${product.handle}`;
+          const relatedImage =
+            getColorImage(product, color) ?? product.featuredImage;
 
           return (
             <li
@@ -187,14 +198,14 @@ async function RelatedProducts({ id }: { id: string }) {
                 prefetch={true}
               >
                 <GridTileImage
-                  alt={product.featuredImage?.altText || product.title}
+                  alt={relatedImage?.altText || product.title}
                   label={{
                     title: product.title,
                     amount: product.priceRange.maxVariantPrice.amount,
                     currencyCode:
                       product.priceRange.maxVariantPrice.currencyCode,
                   }}
-                  src={product.featuredImage?.url}
+                  src={relatedImage?.url}
                   fill
                   sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, (min-width: 475px) 50vw, 100vw"
                 />

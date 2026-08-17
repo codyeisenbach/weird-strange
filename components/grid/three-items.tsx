@@ -2,7 +2,8 @@ import { GridTileImage } from "components/grid/tile";
 import { getCollectionProducts } from "lib/shopify";
 import type { Product } from "lib/shopify/types";
 import {
-  getColorFromAltText,
+  getColorImage,
+  getDefaultColor,
   getVariantSearchParams,
 } from "lib/shopify/variant-matching";
 import Link from "next/link";
@@ -16,11 +17,12 @@ function ThreeItemGridItem({
   size: "full" | "half";
   priority?: boolean;
 }) {
-  const color = getColorFromAltText(item, item.featuredImage?.altText);
+  const color = getDefaultColor(item);
   const variantParams = getVariantSearchParams(item, color);
   const href = variantParams
     ? `/product/${item.handle}?${variantParams}`
     : `/product/${item.handle}`;
+  const itemImage = getColorImage(item, color) ?? item.featuredImage;
 
   return (
     <div
@@ -36,7 +38,7 @@ function ThreeItemGridItem({
         prefetch={true}
       >
         <GridTileImage
-          src={item.featuredImage.url}
+          src={itemImage.url}
           fill
           sizes={
             size === "full"
@@ -44,7 +46,7 @@ function ThreeItemGridItem({
               : "(min-width: 768px) 33vw, 100vw"
           }
           priority={priority}
-          alt={item.featuredImage?.altText || item.title}
+          alt={itemImage?.altText || item.title}
           label={{
             position: size === "full" ? "center" : "bottom",
             title: item.title as string,

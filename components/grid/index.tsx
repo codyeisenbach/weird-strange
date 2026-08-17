@@ -2,7 +2,8 @@ import clsx from "clsx";
 import Price from "components/price";
 import { Product } from "lib/shopify/types";
 import {
-  getColorFromAltText,
+  getColorImage,
+  getDefaultColor,
   getHoverImage,
   getVariantSearchParams,
 } from "lib/shopify/variant-matching";
@@ -27,21 +28,22 @@ function ProductCards({
 }: {
   product: Product;
 } & React.ComponentProps<"li">) {
-  const color = getColorFromAltText(product, product.featuredImage?.altText);
+  const color = getDefaultColor(product);
   const variantParams = getVariantSearchParams(product, color);
   const href = variantParams
     ? `/product/${product.handle}?${variantParams}`
     : `/product/${product.handle}`;
+  const cardImage = getColorImage(product, color) ?? product.featuredImage;
   const hoverImage = getHoverImage(product, color);
 
   return (
     <li {...props} className={clsx("transition-opacity", className)}>
       <Link href={href} prefetch={true} className="block">
         <div className="group relative aspect-[300/368] w-full overflow-hidden">
-          {product.featuredImage?.url ? (
+          {cardImage?.url ? (
             <Image
-              src={product.featuredImage.url}
-              alt={product.featuredImage.altText || product.title}
+              src={cardImage.url}
+              alt={cardImage.altText || product.title}
               fill
               sizes="(min-width: 768px) 25vw, 300px"
               className="object-cover"
