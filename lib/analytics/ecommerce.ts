@@ -1,9 +1,18 @@
 import { sendGTMEvent } from "@next/third-parties/google";
-import type { Cart, CartItem, Product, ProductVariant } from "lib/shopify/types";
+import type {
+  Cart,
+  CartItem,
+  Product,
+  ProductVariant,
+} from "lib/shopify/types";
 
 function pushEcommerceEvent(event: string, ecommerce: Record<string, unknown>) {
+  // Shared between the client-side Meta Pixel fire and the server-forwarded
+  // dataLayer event so GTM's server container can dedupe the two into one
+  // counted event per platform (see CLAUDE.md's analytics section).
+  const eventId = crypto.randomUUID();
   sendGTMEvent({ ecommerce: null });
-  sendGTMEvent({ event, ecommerce });
+  sendGTMEvent({ event, event_id: eventId, ecommerce });
 }
 
 export function trackViewItem(product: Product, variant?: ProductVariant) {
