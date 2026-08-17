@@ -683,6 +683,19 @@ const ALLOWED_IMAGE_TYPES = new Set([
   "image/gif",
 ]);
 
+// Public archive images are downscaled + re-encoded before they ever reach
+// R2 — these are AI-restored/upscaled scans of public-domain pulp covers,
+// and the restoration work itself (unlike the underlying art) is worth
+// protecting from being lifted at full quality for someone else's merch.
+// This isn't a hard block (a downscaled web image can still be
+// screenshotted), just a deterrent: keep full-resolution masters out of
+// the publicly-served path entirely, upload only a capped web version.
+// Admins should keep their full-res source files themselves — this
+// pipeline never stores or has access to the original bytes past request
+// scope.
+const MAX_IMAGE_DIMENSION = 1600;
+const WEBP_QUALITY = 85;
+
 export async function uploadArtworkImage(
   artworkId: string,
   artworkSlug: string,
@@ -697,22 +710,41 @@ export async function uploadArtworkImage(
     return { error: "Image must be smaller than 8MB." };
   }
 
+  let resized: Buffer;
+  try {
+    const sharp = (await import("sharp")).default;
+    resized = await sharp(await file.arrayBuffer())
+      .resize({
+        width: MAX_IMAGE_DIMENSION,
+        height: MAX_IMAGE_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .toFormat("webp", { quality: WEBP_QUALITY })
+      .toBuffer();
+  } catch (resizeError) {
+    console.error(
+      `Failed to process image for artwork '${artworkId}':`,
+      resizeError,
+    );
+    return { error: "Failed to process image." };
+  }
+
   // Randomized filename prefix avoids two problems at once: a collision if
   // two admins upload same-named files for different artworks, and stale
   // browser/CDN caching if an admin re-uploads a replacement image under
   // the same original filename (the object key changes, so it's a cache
-  // miss rather than serving the old bytes).
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const key = `archive/artworks/${artworkSlug}/${crypto.randomUUID()}-${safeName}`;
+  // miss rather than serving the old bytes). Always .webp since every
+  // upload is re-encoded to that format above, regardless of source type.
+  const key = `archive/artworks/${artworkSlug}/${crypto.randomUUID()}.webp`;
 
   try {
-    const bytes = new Uint8Array(await file.arrayBuffer());
     await getR2Client().send(
       new PutObjectCommand({
         Bucket: getR2BucketName(),
         Key: key,
-        Body: bytes,
-        ContentType: file.type,
+        Body: resized,
+        ContentType: "image/webp",
       }),
     );
   } catch (uploadError) {
