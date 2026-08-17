@@ -59,10 +59,7 @@ export default async function Footer() {
               : ""}{" "}
             All rights reserved.
           </p>
-          <p className="md:ml-auto flex gap-4">
-            <Link href="/privacy-choices" className="text-ws-charcoal">
-              Your Privacy Choices
-            </Link>
+          <p className="md:ml-auto">
             <a
               href="https://weirdstrange.com/archive"
               className="text-ws-charcoal"
