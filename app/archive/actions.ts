@@ -135,6 +135,10 @@ export async function createArtworkEntry(
   const publicationId = String(formData.get("publicationId") ?? "").trim();
   const placement = String(formData.get("placement") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const productHandles = formData
+    .getAll("productHandles")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
 
   if (!title) {
     return { error: "Title is required." };
@@ -150,6 +154,7 @@ export async function createArtworkEntry(
     publicationId || null,
     placement || null,
     description,
+    productHandles,
   );
   if (error || !slug) {
     return { error: error ?? "Failed to create entry." };

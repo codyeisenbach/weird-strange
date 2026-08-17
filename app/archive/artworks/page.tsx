@@ -3,6 +3,7 @@ import { ArchiveTile } from "components/archive/tile";
 import { NewArtworkForm } from "components/archive/new-artwork-form";
 import { getAdminUser } from "lib/admin/auth";
 import { getArtists, getArtworks, getPublications } from "lib/archive";
+import { getProducts } from "lib/shopify";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -13,12 +14,12 @@ export const metadata: Metadata = {
 export default async function ArtworksPage() {
   const [artworks, admin] = await Promise.all([getArtworks(), getAdminUser()]);
 
-  // Only fetched for admins, since they're just the <select> options for
-  // the create form — no reason to pay for these queries on every public
-  // page load.
-  const [artists, publications] = admin
-    ? await Promise.all([getArtists(), getPublications()])
-    : [[], []];
+  // Only fetched for admins, since they're just the <select>/picker options
+  // for the create form — no reason to pay for these queries on every
+  // public page load.
+  const [artists, publications, allProducts] = admin
+    ? await Promise.all([getArtists(), getPublications(), getProducts({})])
+    : [[], [], []];
 
   return (
     <section className="mx-auto max-w-(--breakpoint-2xl) px-1 py-12 md:px-4">
@@ -29,6 +30,7 @@ export default async function ArtworksPage() {
           <NewArtworkForm
             artists={artists}
             publications={publications}
+            allProducts={allProducts}
             action={createArtworkEntry}
           />
         </div>

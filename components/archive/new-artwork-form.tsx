@@ -3,21 +3,30 @@
 import { useActionState, useState } from "react";
 import type { EditFormState } from "app/archive/actions";
 import type { Artist, Publication } from "lib/archive/types";
+import type { Product } from "lib/shopify/types";
+import { ProductPicker } from "./product-picker";
 
 // Admin-only "+ New artwork" affordance, mirroring NewEntryForm's
 // toggle-button-to-form pattern, but with the extra artist/publication
 // relational selects an artwork requires that the generic NewEntryForm
-// (title + body only) can't express.
+// (title + body only) can't express, plus a product picker so products can
+// be linked at creation time instead of requiring a second trip to the
+// artwork's detail page afterward. Selected handles are submitted as
+// repeated hidden inputs (FormData supports multiple values per key) and
+// linked server-side right after the artwork row is inserted.
 export function NewArtworkForm({
   artists,
   publications,
+  allProducts,
   action,
 }: {
   artists: Artist[];
   publications: Publication[];
+  allProducts: Product[];
   action: (state: EditFormState, formData: FormData) => Promise<EditFormState>;
 }) {
   const [open, setOpen] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [state, formAction, pending] = useActionState<EditFormState, FormData>(
     action,
     {},
@@ -34,6 +43,18 @@ export function NewArtworkForm({
       </button>
     );
   }
+
+  const addProduct = (handle: string) => {
+    const product = allProducts.find((p) => p.handle === handle);
+    if (!product) return;
+    setSelectedProducts((current) => [...current, product]);
+  };
+
+  const removeProduct = (handle: string) => {
+    setSelectedProducts((current) =>
+      current.filter((p) => p.handle !== handle),
+    );
+  };
 
   return (
     <form
@@ -102,6 +123,40 @@ export function NewArtworkForm({
           className="border border-ws-border bg-transparent px-3 py-2 font-serif text-[17px] leading-7 outline-none focus:border-ws-charcoal"
         />
       </label>
+
+      <div className="flex flex-col gap-2 text-sm">
+        Link products
+        {selectedProducts.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {selectedProducts.map((product) => (
+              <li
+                key={product.handle}
+                className="flex items-center justify-between gap-3 border border-ws-border px-3 py-2 text-sm"
+              >
+                <span className="truncate">{product.title}</span>
+                <button
+                  type="button"
+                  onClick={() => removeProduct(product.handle)}
+                  className="shrink-0 text-xs text-red-600 hover:underline dark:text-red-400"
+                >
+                  Remove
+                </button>
+                <input
+                  type="hidden"
+                  name="productHandles"
+                  value={product.handle}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <ProductPicker
+          products={allProducts}
+          disabledHandles={selectedProducts.map((p) => p.handle)}
+          onSelect={addProduct}
+        />
+      </div>
+
       {state?.error ? (
         <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
       ) : null}

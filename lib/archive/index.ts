@@ -610,24 +610,44 @@ export async function createArtwork(
   publicationId: string | null,
   placement: string | null,
   description: string,
+  productHandles: string[] = [],
 ): Promise<{ slug?: string; error?: string }> {
   const baseSlug = slugify(title);
   if (!baseSlug) return { error: "Title must contain at least one letter." };
 
-  const { row, error } = await insertWithUniqueSlug<{ slug: string }>(
-    "artworks",
-    baseSlug,
-    (slug) => ({
-      slug,
-      title,
-      artist_id: artistId,
-      publication_id: publicationId,
-      placement: placement || null,
-      description: description || null,
-    }),
-  );
+  const { row, error } = await insertWithUniqueSlug<{
+    id: string;
+    slug: string;
+  }>("artworks", baseSlug, (slug) => ({
+    slug,
+    title,
+    artist_id: artistId,
+    publication_id: publicationId,
+    placement: placement || null,
+    description: description || null,
+  }));
 
   if (error || !row) return { error };
+
+  if (productHandles.length > 0) {
+    const supabase = getSupabaseServerClient();
+    const { error: linkError } = await supabase.from("artwork_products").insert(
+      productHandles.map((handle) => ({
+        artwork_id: row.id,
+        shopify_product_id: handle,
+      })),
+    );
+
+    if (linkError) {
+      // The artwork itself was created successfully — a failure here only
+      // means the product links didn't take, which the admin can retry
+      // from the artwork's detail page. Not worth failing the whole create.
+      console.error(
+        `Artwork '${row.slug}' created, but failed to link products:`,
+        linkError.message,
+      );
+    }
+  }
 
   updateTag(ARCHIVE_TAGS.artworks);
   updateTag(ARCHIVE_TAGS.artists);
@@ -661,12 +681,10 @@ export async function linkArtworkProduct(
   shopifyProductHandle: string,
 ): Promise<{ error?: string }> {
   const supabase = getSupabaseServerClient();
-  const { error } = await supabase
-    .from("artwork_products")
-    .insert({
-      artwork_id: artworkId,
-      shopify_product_id: shopifyProductHandle,
-    });
+  const { error } = await supabase.from("artwork_products").insert({
+    artwork_id: artworkId,
+    shopify_product_id: shopifyProductHandle,
+  });
 
   if (error) {
     console.error(
