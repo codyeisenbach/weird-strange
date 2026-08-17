@@ -1,4 +1,5 @@
 import { sendGTMEvent } from "@next/third-parties/google";
+import { hasDoNotSellOptOut } from "lib/analytics/cookies";
 import type {
   Cart,
   CartItem,
@@ -7,6 +8,8 @@ import type {
 } from "lib/shopify/types";
 
 function pushEcommerceEvent(event: string, ecommerce: Record<string, unknown>) {
+  if (hasDoNotSellOptOut()) return;
+
   // Shared between the client-side Meta Pixel fire and the server-forwarded
   // dataLayer event so GTM's server container can dedupe the two into one
   // counted event per platform (see CLAUDE.md's analytics section).
@@ -62,6 +65,7 @@ export function trackRemoveFromCart(item: CartItem) {
 }
 
 export function trackSearch(searchTerm: string) {
+  if (hasDoNotSellOptOut()) return;
   sendGTMEvent({ event: "search", search_term: searchTerm });
 }
 

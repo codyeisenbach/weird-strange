@@ -259,10 +259,18 @@ export async function handleOrderCreated(
 
   const order = JSON.parse(rawBody) as OrderPayload;
 
+  const optedOut = order.note_attributes?.some(
+    (a) => a.name === "_privacy_opt_out" && a.value === "true",
+  );
+
   const results = await Promise.allSettled([
-    sendGA4Purchase(order),
-    sendMetaPurchase(order),
-    sendRedditPurchase(order),
+    ...(optedOut
+      ? []
+      : [
+          sendGA4Purchase(order),
+          sendMetaPurchase(order),
+          sendRedditPurchase(order),
+        ]),
     markAbandonedCheckoutCompleted(order),
   ]);
 

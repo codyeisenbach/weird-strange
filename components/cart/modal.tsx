@@ -6,7 +6,7 @@ import { ShoppingCartIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import LoadingDots from "components/loading-dots";
 import Price from "components/price";
 import { DEFAULT_OPTION } from "lib/constants";
-import { getCookie } from "lib/analytics/cookies";
+import { getCookie, hasDoNotSellOptOut } from "lib/analytics/cookies";
 import { trackBeginCheckout } from "lib/analytics/ecommerce";
 import type { Cart } from "lib/shopify/types";
 import { createUrl } from "lib/utils";
@@ -258,18 +258,22 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
         setIsRedirecting(true);
         trackBeginCheckout(cart);
 
-        const fbp = getCookie("_fbp");
-        const fbc = getCookie("_fbc");
-        const rdtUuid = getCookie("_rdt_uuid");
-        const rdtCid = getCookie("_rdt_cid");
+        const optedOut = hasDoNotSellOptOut();
+        const fbp = optedOut ? undefined : getCookie("_fbp");
+        const fbc = optedOut ? undefined : getCookie("_fbc");
+        const rdtUuid = optedOut ? undefined : getCookie("_rdt_uuid");
+        const rdtCid = optedOut ? undefined : getCookie("_rdt_cid");
         // _ga cookie is "GA1.1.<id1>.<id2>"; GA4's client_id is "<id1>.<id2>".
-        const gaClientId = getCookie("_ga")?.split(".").slice(-2).join(".");
+        const gaClientId = optedOut
+          ? undefined
+          : getCookie("_ga")?.split(".").slice(-2).join(".");
         const attributes = [
           ...(fbp ? [{ key: "_fbp", value: fbp }] : []),
           ...(fbc ? [{ key: "_fbc", value: fbc }] : []),
           ...(rdtUuid ? [{ key: "_rdt_uuid", value: rdtUuid }] : []),
           ...(rdtCid ? [{ key: "_rdt_cid", value: rdtCid }] : []),
           ...(gaClientId ? [{ key: "_ga_client_id", value: gaClientId }] : []),
+          ...(optedOut ? [{ key: "_privacy_opt_out", value: "true" }] : []),
         ];
 
         if (attributes.length > 0) {
@@ -282,7 +286,11 @@ function CheckoutButton({ cart }: { cart: Cart | undefined }) {
         window.location.href = cart.checkoutUrl;
       }}
     >
-      {isRedirecting ? <LoadingDots className="bg-white" /> : "Proceed to Checkout"}
+      {isRedirecting ? (
+        <LoadingDots className="bg-white" />
+      ) : (
+        "Proceed to Checkout"
+      )}
     </button>
   );
 }
