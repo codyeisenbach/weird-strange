@@ -2,6 +2,7 @@ import {
   linkArtworkProductAction,
   saveArtworkEdit,
   unlinkArtworkProductAction,
+  uploadArtworkImageAction,
 } from "app/archive/actions";
 import { GridTileImage } from "components/grid/tile";
 import {
@@ -14,6 +15,7 @@ import {
 } from "components/archive/wiki-article";
 import { WikiEditableArtwork } from "components/archive/wiki-editable-artwork";
 import { LinkedProductsEditor } from "components/archive/linked-products-editor";
+import { ArtworkImageUpload } from "components/archive/artwork-image-upload";
 import { JsonLd } from "components/seo/json-ld";
 import { getAdminUser } from "lib/admin/auth";
 import { getArtists, getArtwork, getPublications } from "lib/archive";
@@ -154,6 +156,15 @@ export default async function ArtworkPage(props: {
           action={saveArtworkEdit.bind(null, artwork.id)}
         >
           <ArtworkProducts artwork={artwork} />
+          <WikiSection title="Image">
+            <ArtworkImageUpload
+              artworkId={artwork.id}
+              artworkSlug={artwork.slug}
+              currentImagePath={artwork.imagePath}
+              currentImageAlt={artwork.imageAlt}
+              uploadAction={uploadArtworkImageAction}
+            />
+          </WikiSection>
           <WikiSection title="Linked products">
             <LinkedProductsEditor
               artworkId={artwork.id}

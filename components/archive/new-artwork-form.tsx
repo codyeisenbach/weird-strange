@@ -124,6 +124,16 @@ export function NewArtworkForm({
         />
       </label>
 
+      <label className="flex flex-col gap-1 text-sm">
+        Image
+        <input
+          type="file"
+          name="image"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none file:mr-3 file:border-0 file:bg-ws-border file:px-3 file:py-1 file:text-sm focus:border-ws-charcoal"
+        />
+      </label>
+
       <div className="flex flex-col gap-2 text-sm">
         Link products
         {selectedProducts.length > 0 ? (

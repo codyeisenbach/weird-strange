@@ -19,6 +19,10 @@ export default {
         protocol: "https",
         hostname: "images.weirdstrange.com",
       },
+      {
+        protocol: "https",
+        hostname: "media.weirdstrange.com",
+      },
     ],
   },
 };

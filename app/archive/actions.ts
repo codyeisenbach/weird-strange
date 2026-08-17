@@ -10,6 +10,7 @@ import {
   updateArtist,
   updateArtwork,
   updatePublication,
+  uploadArtworkImage,
 } from "lib/archive";
 import { redirect } from "next/navigation";
 
@@ -139,6 +140,7 @@ export async function createArtworkEntry(
     .getAll("productHandles")
     .map((value) => String(value).trim())
     .filter(Boolean);
+  const image = formData.get("image");
 
   if (!title) {
     return { error: "Title is required." };
@@ -155,12 +157,28 @@ export async function createArtworkEntry(
     placement || null,
     description,
     productHandles,
+    image instanceof File && image.size > 0 ? image : null,
   );
   if (error || !slug) {
     return { error: error ?? "Failed to create entry." };
   }
 
   redirect(`/archive/artworks/${slug}`);
+}
+
+export async function uploadArtworkImageAction(
+  artworkId: string,
+  artworkSlug: string,
+  formData: FormData,
+): Promise<{ imagePath?: string; error?: string }> {
+  await requireAdmin();
+
+  const image = formData.get("image");
+  if (!(image instanceof File) || image.size === 0) {
+    return { error: "No image file selected." };
+  }
+
+  return uploadArtworkImage(artworkId, artworkSlug, image);
 }
 
 export async function linkArtworkProductAction(

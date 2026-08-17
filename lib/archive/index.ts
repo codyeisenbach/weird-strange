@@ -3,9 +3,11 @@ import {
   unstable_cacheTag as cacheTag,
   updateTag,
 } from "next/cache";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { getProducts } from "lib/shopify";
 import { getSupabaseServerClient } from "lib/supabase/server";
+import { getR2BucketName, getR2Client } from "lib/r2/client";
 import type { Product } from "lib/shopify/types";
 import {
   Artist,
@@ -611,6 +613,7 @@ export async function createArtwork(
   placement: string | null,
   description: string,
   productHandles: string[] = [],
+  image: File | null = null,
 ): Promise<{ slug?: string; error?: string }> {
   const baseSlug = slugify(title);
   if (!baseSlug) return { error: "Title must contain at least one letter." };
@@ -649,10 +652,101 @@ export async function createArtwork(
     }
   }
 
+  if (image) {
+    // Same reasoning as the product-link failure above: the artwork
+    // already exists, so an image upload failure shouldn't fail the whole
+    // create — the admin can retry the upload from the detail page.
+    const { error: imageError } = await uploadArtworkImage(
+      row.id,
+      row.slug,
+      image,
+    );
+    if (imageError) {
+      console.error(
+        `Artwork '${row.slug}' created, but failed to upload image:`,
+        imageError,
+      );
+    }
+  }
+
   updateTag(ARCHIVE_TAGS.artworks);
   updateTag(ARCHIVE_TAGS.artists);
   updateTag(ARCHIVE_TAGS.publications);
   return { slug: row.slug };
+}
+
+const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+
+export async function uploadArtworkImage(
+  artworkId: string,
+  artworkSlug: string,
+  file: File,
+  imageAlt?: string,
+): Promise<{ imagePath?: string; error?: string }> {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return { error: "File must be a JPEG, PNG, WebP, or GIF image." };
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return { error: "Image must be smaller than 8MB." };
+  }
+
+  // Randomized filename prefix avoids two problems at once: a collision if
+  // two admins upload same-named files for different artworks, and stale
+  // browser/CDN caching if an admin re-uploads a replacement image under
+  // the same original filename (the object key changes, so it's a cache
+  // miss rather than serving the old bytes).
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const key = `archive/artworks/${artworkSlug}/${crypto.randomUUID()}-${safeName}`;
+
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    await getR2Client().send(
+      new PutObjectCommand({
+        Bucket: getR2BucketName(),
+        Key: key,
+        Body: bytes,
+        ContentType: file.type,
+      }),
+    );
+  } catch (uploadError) {
+    console.error(
+      `Failed to upload image for artwork '${artworkId}':`,
+      uploadError,
+    );
+    return { error: "Failed to upload image." };
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error: dbError } = await supabase
+    .from("artworks")
+    .update({
+      image_path: key,
+      ...(imageAlt !== undefined ? { image_alt: imageAlt || null } : {}),
+    })
+    .eq("id", artworkId);
+
+  if (dbError) {
+    console.error(
+      `Uploaded image for artwork '${artworkId}', but failed to save image_path:`,
+      dbError.message,
+    );
+    return { error: "Image uploaded, but failed to save." };
+  }
+
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.artists);
+  updateTag(ARCHIVE_TAGS.publications);
+  // `imagePath` here is the resolved public URL (same shape as
+  // Artwork.imagePath elsewhere), not the raw R2 object key, so callers
+  // can render it directly without knowing about resolveImagePath().
+  return { imagePath: resolveImagePath(key) ?? undefined };
 }
 
 export async function getArtworkProducts(
