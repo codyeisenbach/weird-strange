@@ -47,7 +47,7 @@ export function ProductPicker({
         setQuery("");
       }}
     >
-      <div className="relative max-w-md">
+      <div className="relative max-w-xl">
         <ComboboxInput
           className="w-full border border-ws-border bg-transparent px-3 py-2 text-sm outline-none focus:border-ws-charcoal"
           placeholder="Search products to link…"

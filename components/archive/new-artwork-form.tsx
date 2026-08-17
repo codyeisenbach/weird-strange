@@ -38,60 +38,62 @@ export function NewArtworkForm({
   return (
     <form
       action={formAction}
-      className="flex max-w-lg flex-col gap-4 border border-ws-border p-4"
+      className="flex max-w-3xl flex-col gap-4 border border-ws-border p-4"
     >
-      <label className="flex flex-col gap-1 text-sm">
-        Title
-        <input
-          type="text"
-          name="title"
-          required
-          autoFocus
-          className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Artist
-        <select
-          name="artistId"
-          required
-          defaultValue=""
-          className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-        >
-          <option value="" disabled>
-            Select an artist…
-          </option>
-          {artists.map((artist) => (
-            <option key={artist.id} value={artist.id}>
-              {artist.name}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="flex flex-col gap-1 text-sm">
+          Title
+          <input
+            type="text"
+            name="title"
+            required
+            autoFocus
+            className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Placement
+          <input
+            type="text"
+            name="placement"
+            placeholder="front_cover, back_cover, interior…"
+            className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Artist
+          <select
+            name="artistId"
+            required
+            defaultValue=""
+            className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+          >
+            <option value="" disabled>
+              Select an artist…
             </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Publication
-        <select
-          name="publicationId"
-          defaultValue=""
-          className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-        >
-          <option value="">None</option>
-          {publications.map((publication) => (
-            <option key={publication.id} value={publication.id}>
-              {publication.title}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        Placement
-        <input
-          type="text"
-          name="placement"
-          placeholder="front_cover, back_cover, interior…"
-          className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-        />
-      </label>
+            {artists.map((artist) => (
+              <option key={artist.id} value={artist.id}>
+                {artist.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          Publication
+          <select
+            name="publicationId"
+            defaultValue=""
+            className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+          >
+            <option value="">None</option>
+            {publications.map((publication) => (
+              <option key={publication.id} value={publication.id}>
+                {publication.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
       <label className="flex flex-col gap-1 text-sm">
         Description
         <textarea

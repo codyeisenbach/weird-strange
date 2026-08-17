@@ -70,7 +70,7 @@ export function WikiEditableArtwork({
   };
 
   return (
-    <article className="mx-auto max-w-(--breakpoint-lg) px-4 py-12 font-serif text-ws-charcoal">
+    <article className="mx-auto max-w-(--breakpoint-xl) px-4 py-12 font-serif text-ws-charcoal">
       {editing ? (
         <input
           type="text"
@@ -97,46 +97,48 @@ export function WikiEditableArtwork({
           action={submit}
           className="flex flex-col gap-4 font-sans"
         >
-          <label className="flex flex-col gap-1 text-sm">
-            Artist
-            <select
-              name="artistId"
-              required
-              defaultValue={current.artistId}
-              className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-            >
-              {artists.map((artist) => (
-                <option key={artist.id} value={artist.id}>
-                  {artist.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Publication
-            <select
-              name="publicationId"
-              defaultValue={current.publicationId}
-              className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-            >
-              <option value="">None</option>
-              {publications.map((publication) => (
-                <option key={publication.id} value={publication.id}>
-                  {publication.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Placement
-            <input
-              type="text"
-              name="placement"
-              defaultValue={current.placement}
-              placeholder="front_cover, back_cover, interior…"
-              className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
-            />
-          </label>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <label className="flex flex-col gap-1 text-sm">
+              Artist
+              <select
+                name="artistId"
+                required
+                defaultValue={current.artistId}
+                className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+              >
+                {artists.map((artist) => (
+                  <option key={artist.id} value={artist.id}>
+                    {artist.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Publication
+              <select
+                name="publicationId"
+                defaultValue={current.publicationId}
+                className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+              >
+                <option value="">None</option>
+                {publications.map((publication) => (
+                  <option key={publication.id} value={publication.id}>
+                    {publication.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              Placement
+              <input
+                type="text"
+                name="placement"
+                defaultValue={current.placement}
+                placeholder="front_cover, back_cover, interior…"
+                className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
+              />
+            </label>
+          </div>
           <label className="flex flex-col gap-1 text-sm">
             Description
             <textarea

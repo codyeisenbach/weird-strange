@@ -74,7 +74,7 @@ export function WikiEditable({
   };
 
   return (
-    <article className="mx-auto max-w-(--breakpoint-lg) px-4 py-12 font-serif text-ws-charcoal">
+    <article className="mx-auto max-w-(--breakpoint-xl) px-4 py-12 font-serif text-ws-charcoal">
       {editing ? (
         <input
           type="text"

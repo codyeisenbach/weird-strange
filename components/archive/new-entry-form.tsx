@@ -43,7 +43,7 @@ export function NewEntryForm({
   return (
     <form
       action={formAction}
-      className="flex max-w-lg flex-col gap-4 border border-ws-border p-4"
+      className="flex max-w-3xl flex-col gap-4 border border-ws-border p-4"
     >
       <label className="flex flex-col gap-1 text-sm">
         {titleLabel}
