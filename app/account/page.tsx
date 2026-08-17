@@ -1,3 +1,4 @@
+import Footer from "components/layout/footer";
 import {
   customerAccountConfigured,
   getCustomer,
@@ -13,13 +14,16 @@ export const metadata = {
 export default async function AccountPage() {
   if (!customerAccountConfigured) {
     return (
-      <div className="mx-auto max-w-screen-sm px-1 py-20 text-ws-charcoal md:px-4">
-        <h1 className="mb-4 text-2xl font-bold">Account</h1>
-        <p>
-          Customer accounts are not configured yet. Set SHOPIFY_SHOP_ID and
-          SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID.
-        </p>
-      </div>
+      <>
+        <div className="mx-auto max-w-screen-sm px-1 py-20 text-ws-charcoal md:px-4">
+          <h1 className="mb-4 text-2xl font-bold">Account</h1>
+          <p>
+            Customer accounts are not configured yet. Set SHOPIFY_SHOP_ID and
+            SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID.
+          </p>
+        </div>
+        <Footer />
+      </>
     );
   }
 
@@ -46,19 +50,22 @@ export default async function AccountPage() {
     "there";
 
   return (
-    <div className="mx-auto max-w-screen-sm px-1 py-20 text-ws-charcoal md:px-4">
-      <h1 className="mb-4 text-2xl font-bold">Hi, {name}</h1>
-      {customer.emailAddress?.emailAddress ? (
-        <p className="mb-8">
-          Signed in as {customer.emailAddress.emailAddress}
-        </p>
-      ) : null}
-      <a
-        href="/api/auth/logout"
-        className="inline-block border border-ws-border px-4 py-2 text-sm hover:opacity-70"
-      >
-        Log out
-      </a>
-    </div>
+    <>
+      <div className="mx-auto max-w-screen-sm px-1 py-20 text-ws-charcoal md:px-4">
+        <h1 className="mb-4 text-2xl font-bold">Hi, {name}</h1>
+        {customer.emailAddress?.emailAddress ? (
+          <p className="mb-8">
+            Signed in as {customer.emailAddress.emailAddress}
+          </p>
+        ) : null}
+        <a
+          href="/api/auth/logout"
+          className="inline-block border border-ws-border px-4 py-2 text-sm hover:opacity-70"
+        >
+          Log out
+        </a>
+      </div>
+      <Footer />
+    </>
   );
 }
