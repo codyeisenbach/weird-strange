@@ -26,7 +26,6 @@ Only needed for specific features:
 
 - `SHOPIFY_SHOP_ID`, `SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID` — `/account` (Shopify Customer Account OAuth). Without these, `/account` renders a "not configured" message instead of erroring — that's expected, not a bug.
 - `ADMIN_EMAILS`, `NEXT_PUBLIC_SITE_URL` — `/admin`. `ADMIN_EMAILS` is comma-separated (one email is valid); it's the sole authorization check, unrelated to any Supabase role.
-- `SHOPIFY_ADMIN_API_ACCESS_TOKEN`, `PRINTIFY_*`, `WEIRD_STRANGE_PRINTIFY_TOKEN` — Printify → Shopify product sync webhook, not needed for local browsing.
 - `COMING_SOON=true` gates the whole site behind `/coming-soon`, but only for hostnames in `GATED_HOSTS` in `middleware.ts` (production domains) — it does **not** affect `localhost`, so leaving it `true` locally is fine and won't block testing.
 
 ## Verifying a change works
