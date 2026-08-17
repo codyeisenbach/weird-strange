@@ -8,6 +8,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getProducts } from "lib/shopify";
 import { getSupabaseServerClient } from "lib/supabase/server";
 import { getR2BucketName, getR2Client } from "lib/r2/client";
+import { requireAdmin } from "lib/admin/auth";
 import type { Product } from "lib/shopify/types";
 import {
   Artist,
@@ -511,15 +512,21 @@ export type ArtworkEdit = {
   description: string;
 };
 
-// Writes go through the secret-key (service_role) client, bypassing RLS —
-// callers are responsible for authorization (see requireAdmin() in
-// lib/admin/auth.ts). RLS on these tables only grants public `select`;
-// there's no `authenticated`-role policy for admin writes because "admin"
-// here is an app-level allowlist, not a Supabase Auth role.
+// Writes go through the secret-key (service_role) client, bypassing RLS.
+// RLS on these tables only grants public `select`; there's no
+// `authenticated`-role policy for admin writes because "admin" here is an
+// app-level allowlist, not a Supabase Auth role — requireAdmin() (redirects
+// on failure, same as its use in Server Actions) is the actual
+// authorization boundary. Every write function below calls it directly,
+// rather than trusting each caller to have checked first — the callers in
+// app/archive/actions.ts already do check, so this is defense in depth,
+// not a fix for a live gap, but it means a future caller can't accidentally
+// skip authorization.
 export async function updateArtist(
   id: string,
   edit: ArtistTextEdit,
 ): Promise<{ error?: string }> {
+  await requireAdmin();
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("artists")
@@ -542,6 +549,7 @@ export async function updatePublication(
   id: string,
   edit: PublicationTextEdit,
 ): Promise<{ error?: string }> {
+  await requireAdmin();
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("publications")
@@ -566,6 +574,7 @@ export async function updateArtwork(
   id: string,
   edit: ArtworkEdit,
 ): Promise<{ error?: string }> {
+  await requireAdmin();
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("artworks")
@@ -637,6 +646,7 @@ export async function createArtist(
   name: string,
   bio: string,
 ): Promise<{ slug?: string; error?: string }> {
+  await requireAdmin();
   const baseSlug = slugify(name);
   if (!baseSlug) return { error: "Name must contain at least one letter." };
 
@@ -656,6 +666,7 @@ export async function createPublication(
   title: string,
   description: string,
 ): Promise<{ slug?: string; error?: string }> {
+  await requireAdmin();
   const baseSlug = slugify(title);
   if (!baseSlug) return { error: "Title must contain at least one letter." };
 
@@ -680,6 +691,7 @@ export async function createArtwork(
   productHandles: string[] = [],
   image: File | null = null,
 ): Promise<{ slug?: string; error?: string }> {
+  await requireAdmin();
   const baseSlug = slugify(title);
   if (!baseSlug) return { error: "Title must contain at least one letter." };
 
@@ -767,6 +779,8 @@ export async function uploadArtworkImage(
   file: File,
   imageAlt?: string,
 ): Promise<{ imagePath?: string; error?: string }> {
+  await requireAdmin();
+
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return { error: "File must be a JPEG, PNG, WebP, or GIF image." };
   }
@@ -871,6 +885,7 @@ export async function linkArtworkProduct(
   artworkId: string,
   shopifyProductHandle: string,
 ): Promise<{ error?: string }> {
+  await requireAdmin();
   const supabase = getSupabaseServerClient();
   const { error } = await supabase.from("artwork_products").insert({
     artwork_id: artworkId,
@@ -893,6 +908,7 @@ export async function unlinkArtworkProduct(
   artworkId: string,
   shopifyProductHandle: string,
 ): Promise<{ error?: string }> {
+  await requireAdmin();
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("artwork_products")
