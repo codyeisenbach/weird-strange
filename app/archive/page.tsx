@@ -14,7 +14,16 @@ export default function ArchivePage() {
         A running record of the artists and publications behind the work.
       </p>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Link
+          href="/archive/artworks"
+          className="block rounded-lg border border-neutral-200 p-6 hover:border-blue-600 dark:border-neutral-800"
+        >
+          <h2 className="text-xl font-semibold text-ws-charcoal">Artworks</h2>
+          <p className="mt-1 text-sm text-ws-text-muted">
+            Browse every artwork in the archive.
+          </p>
+        </Link>
         <Link
           href="/archive/artists"
           className="block rounded-lg border border-neutral-200 p-6 hover:border-blue-600 dark:border-neutral-800"

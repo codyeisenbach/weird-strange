@@ -21,26 +21,35 @@ export type Publication = ArchiveImage & {
   createdAt: string;
 };
 
-// An artist as it appears in the context of one of their publications
-// (carries the join row's sort_order).
-export type ArtistWithSortOrder = Artist & {
-  sortOrder: number;
-};
-
-// A publication as it appears in the context of one of its artists
-// (carries the join row's sort_order).
-export type PublicationWithSortOrder = Publication & {
-  sortOrder: number;
+export type Artwork = ArchiveImage & {
+  id: string;
+  slug: string;
+  title: string;
+  createdAt: string;
+  placement: string | null;
 };
 
 export type ArtistDetail = Artist & {
   bio: string | null;
-  publications: PublicationWithSortOrder[];
+  // Derived from this artist's artworks (distinct linked publications,
+  // ordered by each publication's earliest linked artwork) rather than a
+  // manually curated join row — see lib/archive/index.ts.
+  publications: Publication[];
   products: Product[];
+  artworks: Artwork[];
 };
 
 export type PublicationDetail = Publication & {
   description: string | null;
-  artists: ArtistWithSortOrder[];
+  // Derived the same way, from the other direction.
+  artists: Artist[];
+  products: Product[];
+  artworks: Artwork[];
+};
+
+export type ArtworkDetail = Artwork & {
+  description: string | null;
+  artist: Artist;
+  publication: Publication | null;
   products: Product[];
 };

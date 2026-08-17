@@ -40,6 +40,23 @@ function ArtistInfobox({ artist }: { artist: ArtistDetail }) {
       alt={artist.imageAlt || artist.name}
       facts={[
         {
+          label: "Artworks",
+          value:
+            artist.artworks.length > 0 ? (
+              <ul>
+                {artist.artworks.map((artwork) => (
+                  <li key={artwork.id}>
+                    <WikiLink href={`/archive/artworks/${artwork.slug}`}>
+                      {artwork.title}
+                    </WikiLink>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              "—"
+            ),
+        },
+        {
           label: "Publications",
           value:
             artist.publications.length > 0 ? (

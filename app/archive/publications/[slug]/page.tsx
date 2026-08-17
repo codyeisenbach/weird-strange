@@ -45,6 +45,23 @@ function PublicationInfobox({
       alt={publication.imageAlt || publication.title}
       facts={[
         {
+          label: "Artworks",
+          value:
+            publication.artworks.length > 0 ? (
+              <ul>
+                {publication.artworks.map((artwork) => (
+                  <li key={artwork.id}>
+                    <WikiLink href={`/archive/artworks/${artwork.slug}`}>
+                      {artwork.title}
+                    </WikiLink>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              "—"
+            ),
+        },
+        {
           label: "Artists",
           value:
             publication.artists.length > 0 ? (

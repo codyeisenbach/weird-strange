@@ -10,16 +10,23 @@ import type { Product } from "lib/shopify/types";
 import {
   Artist,
   ArtistDetail,
-  ArtistWithSortOrder,
+  Artwork,
+  ArtworkDetail,
   Publication,
   PublicationDetail,
-  PublicationWithSortOrder,
 } from "./types";
 
 export const ARCHIVE_TAGS = {
   artists: "archive-artists",
   publications: "archive-publications",
+  artworks: "archive-artworks",
 };
+
+const ALL_ARCHIVE_TAGS = [
+  ARCHIVE_TAGS.artists,
+  ARCHIVE_TAGS.publications,
+  ARCHIVE_TAGS.artworks,
+] as const;
 
 type ArtistRow = {
   id: string;
@@ -37,6 +44,16 @@ type PublicationRow = {
   created_at: string;
   image_path: string | null;
   image_alt: string | null;
+};
+
+type ArtworkRow = {
+  id: string;
+  slug: string;
+  title: string;
+  created_at: string;
+  image_path: string | null;
+  image_alt: string | null;
+  placement: string | null;
 };
 
 const imageBaseUrl = process.env.NEXT_PUBLIC_ARCHIVE_IMAGE_BASE_URL;
@@ -91,6 +108,37 @@ const reshapePublication = (row: PublicationRow): Publication => ({
   imageAlt: row.image_alt,
 });
 
+const reshapeArtwork = (row: ArtworkRow): Artwork => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  createdAt: row.created_at,
+  imagePath: resolveImagePath(row.image_path),
+  imageAlt: row.image_alt,
+  placement: row.placement,
+});
+
+// Dedupes rows by id, ordering groups by the earliest `created_at` among
+// the artwork rows that reference them. Used to derive an artist's
+// publications (and vice versa) from their shared artworks, replacing the
+// old manually-curated artist_publications join table.
+function dedupeByEarliestArtwork<T extends { id: string }>(
+  entries: { createdAt: string; value: T }[],
+): T[] {
+  const earliestById = new Map<string, { createdAt: string; value: T }>();
+
+  for (const entry of entries) {
+    const existing = earliestById.get(entry.value.id);
+    if (!existing || entry.createdAt < existing.createdAt) {
+      earliestById.set(entry.value.id, entry);
+    }
+  }
+
+  return Array.from(earliestById.values())
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((entry) => entry.value);
+}
+
 export async function getArtists(): Promise<Artist[]> {
   "use cache";
   cacheTag(ARCHIVE_TAGS.artists);
@@ -129,11 +177,94 @@ export async function getPublications(): Promise<Publication[]> {
   return (data ?? []).map(reshapePublication);
 }
 
+export async function getArtworks(): Promise<Artwork[]> {
+  "use cache";
+  cacheTag(ARCHIVE_TAGS.artworks);
+  cacheLife("days");
+
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("artworks")
+    .select("id, slug, title, created_at, image_path, image_alt, placement")
+    .order("title", { ascending: true });
+
+  if (error) {
+    console.error("Failed to fetch artworks:", error.message);
+    return [];
+  }
+
+  return (data ?? []).map(reshapeArtwork);
+}
+
+// Fetches the artworks belonging to one artist or publication, along with
+// the distinct publications/artists and product handles derived from them.
+// Shared by getArtist/getPublication since both sides need the same shape
+// of query, just filtered on a different foreign key.
+async function getArtworksFor(
+  filterColumn: "artist_id" | "publication_id",
+  id: string,
+): Promise<{
+  artworks: Artwork[];
+  // Paired 1:1 with `artworks` by index — `linkedArtists[i]`/`linkedPublications[i]`
+  // is the artist/publication (or null) belonging to `artworks[i]`.
+  linkedArtists: (ArtistRow | null)[];
+  linkedPublications: (PublicationRow | null)[];
+  productHandles: string[];
+}> {
+  const supabase = getSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("artworks")
+    .select(
+      "id, slug, title, created_at, image_path, image_alt, placement, " +
+        "artists(id, slug, name, created_at, image_path, image_alt), " +
+        "publications(id, slug, title, created_at, image_path, image_alt), " +
+        "artwork_products(shopify_product_id)",
+    )
+    .eq(filterColumn, id)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error(
+      `Failed to fetch artworks for ${filterColumn} '${id}':`,
+      error.message,
+    );
+    return {
+      artworks: [],
+      linkedArtists: [],
+      linkedPublications: [],
+      productHandles: [],
+    };
+  }
+
+  // Supabase's untyped client can't statically parse this query's nested
+  // embedded-resource selects (three joined resources plus scalar columns
+  // in one call) and falls back to a `GenericStringError` element type —
+  // cast each row through `unknown` up front rather than per-property.
+  const rows = (data ?? []) as unknown as (ArtworkRow & {
+    artists: ArtistRow | null;
+    publications: PublicationRow | null;
+    artwork_products: { shopify_product_id: string }[] | null;
+  })[];
+
+  const artworks = rows.map((row) => reshapeArtwork(row));
+
+  const linkedArtists = rows.map((row) => row.artists);
+
+  const linkedPublications = rows.map((row) => row.publications);
+
+  const productHandles = rows.flatMap(
+    (row) => row.artwork_products?.map((link) => link.shopify_product_id) ?? [],
+  );
+
+  return { artworks, linkedArtists, linkedPublications, productHandles };
+}
+
 export async function getArtist(
   slug: string,
 ): Promise<ArtistDetail | undefined> {
   "use cache";
-  cacheTag(ARCHIVE_TAGS.artists, ARCHIVE_TAGS.publications);
+  cacheTag(...ALL_ARCHIVE_TAGS);
   cacheLife("days");
 
   const supabase = getSupabaseServerClient();
@@ -151,46 +282,27 @@ export async function getArtist(
 
   if (!artistRow) return undefined;
 
-  const [publicationsResult, productsResult] = await Promise.all([
-    supabase
-      .from("artist_publications")
-      .select(
-        "sort_order, publications(id, slug, title, created_at, image_path, image_alt)",
-      )
-      .eq("artist_id", artistRow.id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("artist_products")
-      .select("shopify_product_id")
-      .eq("artist_id", artistRow.id),
-  ]);
-
-  if (publicationsResult.error) {
-    console.error(
-      `Failed to fetch publications for artist '${slug}':`,
-      publicationsResult.error.message,
-    );
-  }
-
-  if (productsResult.error) {
-    console.error(
-      `Failed to fetch products for artist '${slug}':`,
-      productsResult.error.message,
-    );
-  }
-
-  const publications: PublicationWithSortOrder[] = (
-    publicationsResult.data ?? []
-  )
-    .filter((row) => row.publications)
-    .map((row) => ({
-      ...reshapePublication(row.publications as unknown as PublicationRow),
-      sortOrder: row.sort_order,
-    }));
-
-  const productHandles = (productsResult.data ?? []).map(
-    (row) => row.shopify_product_id,
+  const { artworks, linkedPublications, productHandles } = await getArtworksFor(
+    "artist_id",
+    artistRow.id,
   );
+
+  const publications = dedupeByEarliestArtwork(
+    artworks
+      .map((artwork, index) => {
+        const publicationRow = linkedPublications[index];
+        return publicationRow
+          ? {
+              createdAt: artwork.createdAt,
+              value: reshapePublication(publicationRow),
+            }
+          : undefined;
+      })
+      .filter((entry): entry is { createdAt: string; value: Publication } =>
+        Boolean(entry),
+      ),
+  );
+
   const products = await resolveProducts(productHandles);
 
   return {
@@ -198,6 +310,7 @@ export async function getArtist(
     bio: artistRow.bio,
     publications,
     products,
+    artworks,
   };
 }
 
@@ -205,7 +318,7 @@ export async function getPublication(
   slug: string,
 ): Promise<PublicationDetail | undefined> {
   "use cache";
-  cacheTag(ARCHIVE_TAGS.artists, ARCHIVE_TAGS.publications);
+  cacheTag(...ALL_ARCHIVE_TAGS);
   cacheLife("days");
 
   const supabase = getSupabaseServerClient();
@@ -226,50 +339,93 @@ export async function getPublication(
 
   if (!publicationRow) return undefined;
 
-  const [artistsResult, productsResult] = await Promise.all([
-    supabase
-      .from("artist_publications")
-      .select(
-        "sort_order, artists(id, slug, name, created_at, image_path, image_alt)",
-      )
-      .eq("publication_id", publicationRow.id)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("publication_products")
-      .select("shopify_product_id")
-      .eq("publication_id", publicationRow.id),
-  ]);
-
-  if (artistsResult.error) {
-    console.error(
-      `Failed to fetch artists for publication '${slug}':`,
-      artistsResult.error.message,
-    );
-  }
-
-  if (productsResult.error) {
-    console.error(
-      `Failed to fetch products for publication '${slug}':`,
-      productsResult.error.message,
-    );
-  }
-
-  const artists: ArtistWithSortOrder[] = (artistsResult.data ?? [])
-    .filter((row) => row.artists)
-    .map((row) => ({
-      ...reshapeArtist(row.artists as unknown as ArtistRow),
-      sortOrder: row.sort_order,
-    }));
-
-  const productHandles = (productsResult.data ?? []).map(
-    (row) => row.shopify_product_id,
+  const { artworks, linkedArtists, productHandles } = await getArtworksFor(
+    "publication_id",
+    publicationRow.id,
   );
+
+  const artists = dedupeByEarliestArtwork(
+    artworks
+      .map((artwork, index) => {
+        const artistRow = linkedArtists[index];
+        return artistRow
+          ? { createdAt: artwork.createdAt, value: reshapeArtist(artistRow) }
+          : undefined;
+      })
+      .filter((entry): entry is { createdAt: string; value: Artist } =>
+        Boolean(entry),
+      ),
+  );
+
   const products = await resolveProducts(productHandles);
 
   return {
     ...reshapePublication(publicationRow),
     description: publicationRow.description,
     artists,
+    products,
+    artworks,
+  };
+}
+
+export async function getArtwork(
+  slug: string,
+): Promise<ArtworkDetail | undefined> {
+  "use cache";
+  cacheTag(...ALL_ARCHIVE_TAGS);
+  cacheLife("days");
+
+  const supabase = getSupabaseServerClient();
+
+  const { data: artworkRow, error: artworkError } = await supabase
+    .from("artworks")
+    .select(
+      "id, slug, title, created_at, image_path, image_alt, placement, description, " +
+        "artists(id, slug, name, created_at, image_path, image_alt), " +
+        "publications(id, slug, title, created_at, image_path, image_alt), " +
+        "artwork_products(shopify_product_id)",
+    )
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (artworkError) {
+    console.error(`Failed to fetch artwork '${slug}':`, artworkError.message);
+    return undefined;
+  }
+
+  if (!artworkRow) return undefined;
+
+  // Same GenericStringError fallback as getArtworksFor() above — cast the
+  // whole row through `unknown` before accessing the joined resources.
+  const row = artworkRow as unknown as ArtworkRow & {
+    description: string | null;
+    artists: ArtistRow | null;
+    publications: PublicationRow | null;
+    artwork_products: { shopify_product_id: string }[] | null;
+  };
+
+  const artistRow = row.artists;
+  if (!artistRow) {
+    // artist_id is NOT NULL at the DB level, so this only happens if the
+    // artist row itself was deleted out from under the FK (shouldn't
+    // happen given ON DELETE CASCADE) — treat as missing rather than
+    // returning an ArtworkDetail with no artist.
+    console.error(`Artwork '${slug}' has no resolvable artist.`);
+    return undefined;
+  }
+
+  const publicationRow = row.publications;
+
+  const productHandles = (row.artwork_products ?? []).map(
+    (link) => link.shopify_product_id,
+  );
+  const products = await resolveProducts(productHandles);
+
+  return {
+    ...reshapeArtwork(row),
+    description: row.description,
+    artist: reshapeArtist(artistRow),
+    publication: publicationRow ? reshapePublication(publicationRow) : null,
     products,
   };
 }
@@ -281,6 +437,14 @@ export type ArtistTextEdit = {
 
 export type PublicationTextEdit = {
   title: string;
+  description: string;
+};
+
+export type ArtworkEdit = {
+  title: string;
+  artistId: string;
+  publicationId: string | null;
+  placement: string | null;
   description: string;
 };
 
@@ -304,7 +468,10 @@ export async function updateArtist(
     return { error: "Failed to save changes." };
   }
 
+  // Also busts artworks: an artist's name is embedded on any artwork
+  // detail page that links to them.
   updateTag(ARCHIVE_TAGS.artists);
+  updateTag(ARCHIVE_TAGS.artworks);
   return {};
 }
 
@@ -323,6 +490,36 @@ export async function updatePublication(
     return { error: "Failed to save changes." };
   }
 
+  updateTag(ARCHIVE_TAGS.publications);
+  updateTag(ARCHIVE_TAGS.artworks);
+  return {};
+}
+
+export async function updateArtwork(
+  id: string,
+  edit: ArtworkEdit,
+): Promise<{ error?: string }> {
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("artworks")
+    .update({
+      title: edit.title,
+      artist_id: edit.artistId,
+      publication_id: edit.publicationId,
+      placement: edit.placement || null,
+      description: edit.description || null,
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error(`Failed to update artwork '${id}':`, error.message);
+    return { error: "Failed to save changes." };
+  }
+
+  // An artwork edit can change which artist/publication it's linked to, so
+  // all three tags need busting rather than just archive-artworks.
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.artists);
   updateTag(ARCHIVE_TAGS.publications);
   return {};
 }
@@ -344,7 +541,7 @@ const MAX_SLUG_ATTEMPTS = 20;
 // actual source of truth for uniqueness — this just makes collisions
 // self-resolving instead of a dead end for the admin filling out the form.
 async function insertWithUniqueSlug<T extends { slug: string }>(
-  table: "artists" | "publications",
+  table: "artists" | "publications" | "artworks",
   baseSlug: string,
   buildRow: (slug: string) => Record<string, unknown>,
 ): Promise<{ row?: T; error?: string }> {
@@ -403,6 +600,37 @@ export async function createPublication(
 
   if (error || !row) return { error };
 
+  updateTag(ARCHIVE_TAGS.publications);
+  return { slug: row.slug };
+}
+
+export async function createArtwork(
+  title: string,
+  artistId: string,
+  publicationId: string | null,
+  placement: string | null,
+  description: string,
+): Promise<{ slug?: string; error?: string }> {
+  const baseSlug = slugify(title);
+  if (!baseSlug) return { error: "Title must contain at least one letter." };
+
+  const { row, error } = await insertWithUniqueSlug<{ slug: string }>(
+    "artworks",
+    baseSlug,
+    (slug) => ({
+      slug,
+      title,
+      artist_id: artistId,
+      publication_id: publicationId,
+      placement: placement || null,
+      description: description || null,
+    }),
+  );
+
+  if (error || !row) return { error };
+
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.artists);
   updateTag(ARCHIVE_TAGS.publications);
   return { slug: row.slug };
 }

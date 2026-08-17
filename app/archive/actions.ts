@@ -3,8 +3,10 @@
 import { requireAdmin } from "lib/admin/auth";
 import {
   createArtist,
+  createArtwork,
   createPublication,
   updateArtist,
+  updateArtwork,
   updatePublication,
 } from "lib/archive";
 import { redirect } from "next/navigation";
@@ -88,4 +90,68 @@ export async function createPublicationEntry(
   }
 
   redirect(`/archive/publications/${slug}`);
+}
+
+export async function saveArtworkEdit(
+  id: string,
+  _prevState: EditFormState,
+  formData: FormData,
+): Promise<EditFormState> {
+  await requireAdmin();
+
+  const title = String(formData.get("title") ?? "").trim();
+  const artistId = String(formData.get("artistId") ?? "").trim();
+  const publicationId = String(formData.get("publicationId") ?? "").trim();
+  const placement = String(formData.get("placement") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!title) {
+    return { error: "Title is required." };
+  }
+
+  if (!artistId) {
+    return { error: "Artist is required." };
+  }
+
+  return updateArtwork(id, {
+    title,
+    artistId,
+    publicationId: publicationId || null,
+    placement: placement || null,
+    description,
+  });
+}
+
+export async function createArtworkEntry(
+  _prevState: EditFormState,
+  formData: FormData,
+): Promise<EditFormState> {
+  await requireAdmin();
+
+  const title = String(formData.get("title") ?? "").trim();
+  const artistId = String(formData.get("artistId") ?? "").trim();
+  const publicationId = String(formData.get("publicationId") ?? "").trim();
+  const placement = String(formData.get("placement") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!title) {
+    return { error: "Title is required." };
+  }
+
+  if (!artistId) {
+    return { error: "Artist is required." };
+  }
+
+  const { slug, error } = await createArtwork(
+    title,
+    artistId,
+    publicationId || null,
+    placement || null,
+    description,
+  );
+  if (error || !slug) {
+    return { error: error ?? "Failed to create entry." };
+  }
+
+  redirect(`/archive/artworks/${slug}`);
 }
