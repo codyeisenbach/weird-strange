@@ -1,4 +1,5 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
+import { isAdminEmail } from "lib/admin/allowlist";
 import { getSupabaseAuthServerClient } from "lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -26,19 +27,48 @@ export async function GET(request: NextRequest) {
 
   const supabase = await getSupabaseAuthServerClient();
 
+  let exchangeError: { message: string } | null = null;
+
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash });
-    if (!error) {
-      return NextResponse.redirect(new URL(next, origin));
-    }
+    ({ error: exchangeError } = await supabase.auth.verifyOtp({
+      type,
+      token_hash,
+    }));
   } else if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(new URL(next, origin));
-    }
+    ({ error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code));
+  } else {
+    return NextResponse.redirect(
+      new URL("/admin/login?error=invalid-link", origin),
+    );
   }
 
-  return NextResponse.redirect(
-    new URL("/admin/login?error=invalid-link", origin),
-  );
+  if (exchangeError) {
+    return NextResponse.redirect(
+      new URL("/admin/login?error=invalid-link", origin),
+    );
+  }
+
+  // The magic-link path already only ever sends a link to an allowlisted
+  // address (see sendMagicLink), so this check is redundant there but
+  // harmless. It's the actual boundary for the Google OAuth path, which has
+  // no allowlist gate before this point — Supabase will happily hand back a
+  // valid session for *any* Google account that signs in, and only refuses
+  // to auto-provision a *new* one because `enable_signup` is off in the
+  // Supabase dashboard (Auth -> Sign In / Providers -> User Signups). That
+  // dashboard toggle is a single point of failure outside this repo; this
+  // check makes the allowlist the enforced boundary regardless of whatever
+  // that setting is currently set to.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!isAdminEmail(user?.email)) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(
+      new URL("/admin/login?error=not-authorized", origin),
+    );
+  }
+
+  return NextResponse.redirect(new URL(next, origin));
 }
