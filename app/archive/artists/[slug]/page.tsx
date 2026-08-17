@@ -13,7 +13,10 @@ import { getAdminUser } from "lib/admin/auth";
 import { getArtist } from "lib/archive";
 import type { ArtistDetail } from "lib/archive/types";
 import { siteUrl } from "lib/site-config";
-import { buildBreadcrumbJsonLd } from "lib/shopify/structured-data";
+import {
+  buildBreadcrumbJsonLd,
+  buildPersonJsonLd,
+} from "lib/shopify/structured-data";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -126,16 +129,18 @@ export default async function ArtistPage(props: {
 
   if (!artist) return notFound();
 
+  const artistUrl = `${siteUrl}/archive/artists/${artist.slug}`;
+  const personJsonLd = buildPersonJsonLd(artist, artistUrl);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: siteUrl },
     { name: "Archive", url: `${siteUrl}/archive` },
     { name: "Artists", url: `${siteUrl}/archive/artists` },
-    { name: artist.name, url: `${siteUrl}/archive/artists/${artist.slug}` },
+    { name: artist.name, url: artistUrl },
   ]);
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={[personJsonLd, breadcrumbJsonLd]} />
       {admin ? (
         <WikiEditable
           subtitle="From the Weird Strange Archive"

@@ -22,7 +22,10 @@ import { getArtists, getArtwork, getPublications } from "lib/archive";
 import { getProducts } from "lib/shopify";
 import type { ArtworkDetail } from "lib/archive/types";
 import { siteUrl } from "lib/site-config";
-import { buildBreadcrumbJsonLd } from "lib/shopify/structured-data";
+import {
+  buildArtworkCreativeWorkJsonLd,
+  buildBreadcrumbJsonLd,
+} from "lib/shopify/structured-data";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -146,16 +149,18 @@ export default async function ArtworkPage(props: {
     ? await Promise.all([getArtists(), getPublications(), getProducts({})])
     : [[], [], []];
 
+  const artworkUrl = `${siteUrl}/archive/artworks/${artwork.slug}`;
+  const artworkJsonLd = buildArtworkCreativeWorkJsonLd(artwork, artworkUrl);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: siteUrl },
     { name: "Archive", url: `${siteUrl}/archive` },
     { name: "Artworks", url: `${siteUrl}/archive/artworks` },
-    { name: artwork.title, url: `${siteUrl}/archive/artworks/${artwork.slug}` },
+    { name: artwork.title, url: artworkUrl },
   ]);
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={[artworkJsonLd, breadcrumbJsonLd]} />
       {admin ? (
         <WikiEditableArtwork
           subtitle="From the Weird Strange Archive"

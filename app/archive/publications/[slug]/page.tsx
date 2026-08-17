@@ -14,7 +14,10 @@ import { getAdminUser } from "lib/admin/auth";
 import { getPublication } from "lib/archive";
 import type { PublicationDetail } from "lib/archive/types";
 import { siteUrl } from "lib/site-config";
-import { buildBreadcrumbJsonLd } from "lib/shopify/structured-data";
+import {
+  buildBreadcrumbJsonLd,
+  buildCreativeWorkSeriesJsonLd,
+} from "lib/shopify/structured-data";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -142,19 +145,21 @@ export default async function PublicationPage(props: {
 
   if (!publication) return notFound();
 
+  const publicationUrl = `${siteUrl}/archive/publications/${publication.slug}`;
+  const creativeWorkSeriesJsonLd = buildCreativeWorkSeriesJsonLd(
+    publication,
+    publicationUrl,
+  );
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: siteUrl },
     { name: "Archive", url: `${siteUrl}/archive` },
     { name: "Publications", url: `${siteUrl}/archive/publications` },
-    {
-      name: publication.title,
-      url: `${siteUrl}/archive/publications/${publication.slug}`,
-    },
+    { name: publication.title, url: publicationUrl },
   ]);
 
   return (
     <>
-      <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={[creativeWorkSeriesJsonLd, breadcrumbJsonLd]} />
       {admin ? (
         <WikiEditable
           subtitle="From the Weird Strange Archive"
