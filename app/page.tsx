@@ -3,7 +3,6 @@ import { Carousel } from "components/carousel";
 import Grid, { ProductCards } from "components/grid";
 import { ThreeItemGrid } from "components/grid/three-items";
 import { ImageBanner } from "components/image-banner";
-import Footer from "components/layout/footer";
 import { ProductCarousel } from "components/product-carousel";
 import { getCollectionProducts, getProducts } from "lib/shopify";
 
@@ -65,7 +64,6 @@ export default async function HomePage() {
       </div>
       <ThreeItemGrid />
       <Carousel />
-      <Footer />
     </>
   );
 }

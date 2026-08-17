@@ -8,7 +8,6 @@ import {
   WikiSection,
 } from "components/archive/wiki-article";
 import { WikiEditable } from "components/archive/wiki-editable";
-import Footer from "components/layout/footer";
 import { JsonLd } from "components/seo/json-ld";
 import { getAdminUser } from "lib/admin/auth";
 import { getArtist } from "lib/archive";
@@ -144,7 +143,6 @@ export default async function ArtistPage(props: {
           <ArtistProducts artist={artist} />
         </WikiArticle>
       )}
-      <Footer />
     </>
   );
 }

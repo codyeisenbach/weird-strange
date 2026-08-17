@@ -1,5 +1,4 @@
 import { GridTileImage } from "components/grid/tile";
-import Footer from "components/layout/footer";
 import { JsonLd } from "components/seo/json-ld";
 import { Gallery } from "components/product/gallery";
 import {
@@ -150,7 +149,6 @@ export default async function ProductPage(props: {
         </div>
         <RelatedProducts id={product.id} />
       </div>
-      <Footer />
     </>
   );
 }

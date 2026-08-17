@@ -8,7 +8,6 @@ import {
   WikiSection,
 } from "components/archive/wiki-article";
 import { WikiEditable } from "components/archive/wiki-editable";
-import Footer from "components/layout/footer";
 import { JsonLd } from "components/seo/json-ld";
 import { getAdminUser } from "lib/admin/auth";
 import { getPublication } from "lib/archive";
@@ -154,7 +153,6 @@ export default async function PublicationPage(props: {
           <PublicationProducts publication={publication} />
         </WikiArticle>
       )}
-      <Footer />
     </>
   );
 }
