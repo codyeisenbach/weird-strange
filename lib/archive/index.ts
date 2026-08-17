@@ -634,3 +634,71 @@ export async function createArtwork(
   updateTag(ARCHIVE_TAGS.publications);
   return { slug: row.slug };
 }
+
+export async function getArtworkProducts(
+  artworkId: string,
+): Promise<Product[]> {
+  const supabase = getSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("artwork_products")
+    .select("shopify_product_id")
+    .eq("artwork_id", artworkId);
+
+  if (error) {
+    console.error(
+      `Failed to fetch products for artwork '${artworkId}':`,
+      error.message,
+    );
+    return [];
+  }
+
+  const handles = (data ?? []).map((row) => row.shopify_product_id);
+  return resolveProducts(handles);
+}
+
+export async function linkArtworkProduct(
+  artworkId: string,
+  shopifyProductHandle: string,
+): Promise<{ error?: string }> {
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("artwork_products")
+    .insert({
+      artwork_id: artworkId,
+      shopify_product_id: shopifyProductHandle,
+    });
+
+  if (error) {
+    console.error(
+      `Failed to link product '${shopifyProductHandle}' to artwork '${artworkId}':`,
+      error.message,
+    );
+    return { error: "Failed to link product." };
+  }
+
+  updateTag(ARCHIVE_TAGS.artworks);
+  return {};
+}
+
+export async function unlinkArtworkProduct(
+  artworkId: string,
+  shopifyProductHandle: string,
+): Promise<{ error?: string }> {
+  const supabase = getSupabaseServerClient();
+  const { error } = await supabase
+    .from("artwork_products")
+    .delete()
+    .eq("artwork_id", artworkId)
+    .eq("shopify_product_id", shopifyProductHandle);
+
+  if (error) {
+    console.error(
+      `Failed to unlink product '${shopifyProductHandle}' from artwork '${artworkId}':`,
+      error.message,
+    );
+    return { error: "Failed to unlink product." };
+  }
+
+  updateTag(ARCHIVE_TAGS.artworks);
+  return {};
+}

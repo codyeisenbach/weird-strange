@@ -1,4 +1,8 @@
-import { saveArtworkEdit } from "app/archive/actions";
+import {
+  linkArtworkProductAction,
+  saveArtworkEdit,
+  unlinkArtworkProductAction,
+} from "app/archive/actions";
 import { GridTileImage } from "components/grid/tile";
 import {
   ArticleBody,
@@ -9,9 +13,11 @@ import {
   WikiSection,
 } from "components/archive/wiki-article";
 import { WikiEditableArtwork } from "components/archive/wiki-editable-artwork";
+import { LinkedProductsEditor } from "components/archive/linked-products-editor";
 import { JsonLd } from "components/seo/json-ld";
 import { getAdminUser } from "lib/admin/auth";
 import { getArtists, getArtwork, getPublications } from "lib/archive";
+import { getProducts } from "lib/shopify";
 import type { ArtworkDetail } from "lib/archive/types";
 import { siteUrl } from "lib/site-config";
 import { buildBreadcrumbJsonLd } from "lib/shopify/structured-data";
@@ -116,11 +122,11 @@ export default async function ArtworkPage(props: {
 
   if (!artwork) return notFound();
 
-  // Only fetched for admins, since they're just the <select> options for
-  // the edit form.
-  const [artists, publications] = admin
-    ? await Promise.all([getArtists(), getPublications()])
-    : [[], []];
+  // Only fetched for admins, since they're just the <select>/picker options
+  // for the edit form and the product-linking UI.
+  const [artists, publications, allProducts] = admin
+    ? await Promise.all([getArtists(), getPublications(), getProducts({})])
+    : [[], [], []];
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Home", url: siteUrl },
@@ -148,6 +154,15 @@ export default async function ArtworkPage(props: {
           action={saveArtworkEdit.bind(null, artwork.id)}
         >
           <ArtworkProducts artwork={artwork} />
+          <WikiSection title="Linked products">
+            <LinkedProductsEditor
+              artworkId={artwork.id}
+              allProducts={allProducts}
+              initialLinkedProducts={artwork.products}
+              linkAction={linkArtworkProductAction}
+              unlinkAction={unlinkArtworkProductAction}
+            />
+          </WikiSection>
         </WikiEditableArtwork>
       ) : (
         <WikiArticle

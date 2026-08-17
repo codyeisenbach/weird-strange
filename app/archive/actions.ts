@@ -5,6 +5,8 @@ import {
   createArtist,
   createArtwork,
   createPublication,
+  linkArtworkProduct,
+  unlinkArtworkProduct,
   updateArtist,
   updateArtwork,
   updatePublication,
@@ -154,4 +156,20 @@ export async function createArtworkEntry(
   }
 
   redirect(`/archive/artworks/${slug}`);
+}
+
+export async function linkArtworkProductAction(
+  artworkId: string,
+  shopifyProductHandle: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  return linkArtworkProduct(artworkId, shopifyProductHandle);
+}
+
+export async function unlinkArtworkProductAction(
+  artworkId: string,
+  shopifyProductHandle: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  return unlinkArtworkProduct(artworkId, shopifyProductHandle);
 }
