@@ -9,6 +9,23 @@ export default {
   // step) — this tells Next to require() it directly from
   // node_modules at runtime instead of bundling it.
   serverExternalPackages: ["sharp"],
+  // serverExternalPackages alone isn't sufficient on Vercel + pnpm: sharp
+  // resolves its platform package (@img/sharp-linux-x64) and libvips
+  // (@img/sharp-libvips-linux-x64) at runtime via process.platform/arch
+  // rather than a static top-level require, and Next's output file tracer
+  // (@vercel/nft, static analysis) doesn't reliably follow that indirection
+  // through pnpm's nested/symlinked node_modules store — the .so files were
+  // silently missing from the deployed function even though the lockfile
+  // and local trace both looked correct. This forces them in explicitly,
+  // regardless of what static tracing finds. If sharp's version changes,
+  // this glob still matches (keyed on the package dir, not a version
+  // string), so it shouldn't need updating on a routine sharp bump.
+  outputFileTracingIncludes: {
+    "/archive/**": [
+      "./node_modules/.pnpm/@img+sharp-linux-x64@*/node_modules/@img/sharp-linux-x64/**",
+      "./node_modules/.pnpm/@img+sharp-libvips-linux-x64@*/node_modules/@img/sharp-libvips-linux-x64/**",
+    ],
+  },
   experimental: {
     ppr: true,
     inlineCss: true,
