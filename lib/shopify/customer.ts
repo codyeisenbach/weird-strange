@@ -159,6 +159,7 @@ export type OrderLineItem = {
   image: { url: string; altText: string | null } | null;
   price: OrderMoney;
   totalPrice: OrderMoney;
+  productId: string | null;
 };
 
 export type OrderFulfillment = {
@@ -235,6 +236,11 @@ const ORDER_FIELDS = `
         amount
         currencyCode
       }
+      variant {
+        product {
+          id
+        }
+      }
     }
   }
   fulfillments(first: 10) {
@@ -249,6 +255,25 @@ const ORDER_FIELDS = `
     }
   }
 `;
+
+// The API returns productId nested under variant.product.id; flatten it
+// onto the line item so callers don't need to know about that nesting.
+function reshapeOrder<T extends { lineItems: { nodes: unknown[] } }>(
+  order: T,
+): T {
+  return {
+    ...order,
+    lineItems: {
+      nodes: order.lineItems.nodes.map((item) => {
+        const raw = item as OrderLineItem & {
+          variant: { product: { id: string } } | null;
+        };
+        const { variant, ...rest } = raw;
+        return { ...rest, productId: variant?.product.id ?? null };
+      }),
+    },
+  };
+}
 
 export type CustomerSession = {
   accessToken: string | undefined;
@@ -350,7 +375,11 @@ export async function getCustomerOrders(
   const body = await res.json();
   if (body.errors || !body.data?.customer) return null;
 
-  return body.data.customer.orders;
+  const orders = body.data.customer.orders;
+  return {
+    ...orders,
+    nodes: orders.nodes.map(reshapeOrder),
+  };
 }
 
 export async function getCustomerOrder(
@@ -381,5 +410,5 @@ export async function getCustomerOrder(
   const body = await res.json();
   if (body.errors || !body.data?.order) return null;
 
-  return body.data.order;
+  return reshapeOrder(body.data.order);
 }

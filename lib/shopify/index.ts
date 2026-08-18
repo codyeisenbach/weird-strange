@@ -28,6 +28,7 @@ import {
 import { getMenuQuery } from "./queries/menu";
 import { getPageQuery, getPagesQuery } from "./queries/page";
 import {
+  getProductHandleByIdQuery,
   getProductQuery,
   getProductRecommendationsQuery,
   getProductsQuery,
@@ -52,6 +53,7 @@ import {
   ShopifyPageOperation,
   ShopifyPagesOperation,
   ShopifyProduct,
+  ShopifyProductHandleByIdOperation,
   ShopifyProductOperation,
   ShopifyProductRecommendationsOperation,
   ShopifyProductsOperation,
@@ -143,7 +145,7 @@ const reshapeCart = (cart: ShopifyCart): Cart => {
 };
 
 const reshapeCollection = (
-  collection: ShopifyCollection
+  collection: ShopifyCollection,
 ): Collection | undefined => {
   if (!collection) {
     return undefined;
@@ -209,7 +211,7 @@ const reshapeOptions = (options: ShopifyProduct["options"]) => {
 
 const reshapeProduct = (
   product: ShopifyProduct,
-  filterHiddenProducts: boolean = true
+  filterHiddenProducts: boolean = true,
 ) => {
   if (
     !product ||
@@ -261,7 +263,7 @@ export async function createCart(): Promise<Cart> {
 }
 
 export async function addToCart(
-  lines: { merchandiseId: string; quantity: number }[]
+  lines: { merchandiseId: string; quantity: number }[],
 ): Promise<Cart> {
   const cartId = (await cookies()).get("cartId")?.value!;
   const res = await shopifyFetch<ShopifyAddToCartOperation>({
@@ -288,7 +290,7 @@ export async function removeFromCart(lineIds: string[]): Promise<Cart> {
 }
 
 export async function updateCart(
-  lines: { id: string; merchandiseId: string; quantity: number }[]
+  lines: { id: string; merchandiseId: string; quantity: number }[],
 ): Promise<Cart> {
   const cartId = (await cookies()).get("cartId")?.value!;
   const res = await shopifyFetch<ShopifyUpdateCartOperation>({
@@ -303,7 +305,7 @@ export async function updateCart(
 }
 
 export async function updateCartAttributes(
-  attributes: { key: string; value: string }[]
+  attributes: { key: string; value: string }[],
 ): Promise<Cart> {
   const cartId = (await cookies()).get("cartId")?.value!;
   const res = await shopifyFetch<ShopifyUpdateCartAttributesOperation>({
@@ -342,7 +344,7 @@ export async function getCart(): Promise<Cart | undefined> {
 }
 
 export async function getCollection(
-  handle: string
+  handle: string,
 ): Promise<Collection | undefined> {
   "use cache";
   cacheTag(TAGS.collections);
@@ -373,7 +375,7 @@ export async function getCollectionProducts({
 
   if (!endpoint) {
     console.log(
-      `Skipping getCollectionProducts for '${collection}' - Shopify not configured`
+      `Skipping getCollectionProducts for '${collection}' - Shopify not configured`,
     );
     return [];
   }
@@ -393,7 +395,7 @@ export async function getCollectionProducts({
   }
 
   return reshapeProducts(
-    removeEdgesAndNodes(res.body.data.collection.products)
+    removeEdgesAndNodes(res.body.data.collection.products),
   );
 }
 
@@ -426,13 +428,13 @@ export async function getCollections(): Promise<Collection[]> {
   // Filter out the `hidden` collections.
   // Collections that start with `hidden-*` need to be hidden on the search page.
   const filteredCollections = reshapeCollections(shopifyCollections).filter(
-    (collection) => !collection.handle.startsWith("hidden")
+    (collection) => !collection.handle.startsWith("hidden"),
   );
 
   // Only inject the synthetic "All" entry if a real `all` collection
   // doesn't already exist, to avoid showing "All" twice.
   const hasAllCollection = filteredCollections.some(
-    (collection) => collection.handle === "all"
+    (collection) => collection.handle === "all",
   );
 
   const collections = [
@@ -523,7 +525,7 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
 }
 
 export async function getProductRecommendations(
-  productId: string
+  productId: string,
 ): Promise<Product[]> {
   "use cache";
   cacheTag(TAGS.products);
@@ -537,6 +539,30 @@ export async function getProductRecommendations(
   });
 
   return reshapeProducts(res.body.data.productRecommendations);
+}
+
+// Resolves a Storefront-API-usable Product or ProductVariant GID (as
+// returned by the Customer Account API's order line items) to this store's
+// product handle, so an order line item can link to its /product/[handle]
+// page here instead of Shopify's hosted storefront.
+export async function getProductHandleById(
+  id: string,
+): Promise<string | undefined> {
+  "use cache";
+  cacheTag(TAGS.products);
+  cacheLife("days");
+
+  if (!endpoint) return undefined;
+
+  const res = await shopifyFetch<ShopifyProductHandleByIdOperation>({
+    query: getProductHandleByIdQuery,
+    variables: { id },
+  });
+
+  const node = res.body.data.node;
+  if (!node) return undefined;
+  if ("handle" in node) return node.handle;
+  return node.product.handle;
 }
 
 export async function getProducts({

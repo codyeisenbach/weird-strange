@@ -8,6 +8,7 @@ import {
   type OrderFulfillment,
   type OrderLineItem,
 } from "lib/shopify/customer";
+import { getProductHandleById } from "lib/shopify";
 import Price from "components/price";
 import Image from "next/image";
 import Link from "next/link";
@@ -223,37 +224,11 @@ async function OrderDetail({
       <TrackingInfo fulfillments={order.fulfillments.nodes} />
 
       <ul className="border-t border-ws-border/20">
-        {order.lineItems.nodes.map((item, i) => (
-          <li
-            key={i}
-            className="flex items-center gap-4 border-b border-ws-border/20 py-4"
-          >
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-ws-border/20 bg-ws-cream">
-              {item.image ? (
-                <Image
-                  className="h-full w-full object-cover"
-                  width={64}
-                  height={64}
-                  alt={item.image.altText || item.title}
-                  src={item.image.url}
-                />
-              ) : null}
-            </div>
-            <div className="flex flex-1 items-center justify-between gap-4">
-              <div>
-                <p>{item.title}</p>
-                <p className="text-sm text-ws-text-muted">
-                  Qty {item.quantity}
-                </p>
-              </div>
-              <Price
-                className="text-right text-sm font-medium"
-                amount={item.totalPrice.amount}
-                currencyCode={item.totalPrice.currencyCode}
-              />
-            </div>
-          </li>
-        ))}
+        {await Promise.all(
+          order.lineItems.nodes.map(async (item, i) => (
+            <OrderLineItemRow key={i} item={item} />
+          )),
+        )}
       </ul>
 
       <div className="mt-4 max-w-xs space-y-2 py-4 text-sm sm:ml-auto">
@@ -293,6 +268,58 @@ async function OrderDetail({
         </div>
       </div>
     </section>
+  );
+}
+
+async function OrderLineItemRow({ item }: { item: OrderLineItem }) {
+  const handle = item.productId
+    ? await getProductHandleById(item.productId)
+    : undefined;
+
+  const content = (
+    <>
+      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-ws-border/20 bg-ws-cream">
+        {item.image ? (
+          <Image
+            className="h-full w-full object-cover"
+            width={64}
+            height={64}
+            alt={item.image.altText || item.title}
+            src={item.image.url}
+          />
+        ) : null}
+      </div>
+      <div className="flex flex-1 items-center justify-between gap-4">
+        <div>
+          <p>{item.title}</p>
+          <p className="text-sm text-ws-text-muted">Qty {item.quantity}</p>
+        </div>
+        <Price
+          className="text-right text-sm font-medium"
+          amount={item.totalPrice.amount}
+          currencyCode={item.totalPrice.currencyCode}
+        />
+      </div>
+    </>
+  );
+
+  if (handle) {
+    return (
+      <li className="border-b border-ws-border/20">
+        <Link
+          href={`/product/${handle}`}
+          className="flex items-center gap-4 py-4 hover:bg-ws-charcoal/5"
+        >
+          {content}
+        </Link>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center gap-4 border-b border-ws-border/20 py-4">
+      {content}
+    </li>
   );
 }
 

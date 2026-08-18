@@ -280,6 +280,15 @@ export type ShopifyProductRecommendationsOperation = {
   };
 };
 
+export type ShopifyProductHandleByIdOperation = {
+  data: {
+    node: { handle: string } | { product: { handle: string } } | null;
+  };
+  variables: {
+    id: string;
+  };
+};
+
 export type ShopifyProductsOperation = {
   data: {
     products: Connection<ShopifyProduct>;
