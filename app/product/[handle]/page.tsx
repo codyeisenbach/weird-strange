@@ -159,6 +159,7 @@ export default async function ProductPage(props: {
               <ProductDescription
                 product={product}
                 selectedVariant={selectedVariant}
+                artworks={artworks}
               />
             </Suspense>
           </div>
