@@ -40,6 +40,24 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Let anyone who has signed in through /admin (i.e. an allowlisted admin)
+  // browse the real storefront too, not just /admin itself — useful for
+  // previewing the live site while it's gated from the public. Only bother
+  // verifying the session (a network round-trip to Supabase) if a Supabase
+  // auth cookie is actually present — anonymous visitors, who are the vast
+  // majority of traffic on a coming-soon-gated site, have none, so this
+  // keeps their request cheap.
+  const hasSupabaseCookie = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-"));
+
+  if (hasSupabaseCookie) {
+    const { response, user } = await updateSupabaseSession(request);
+    if (isAdminEmail(user?.email)) {
+      return response;
+    }
+  }
+
   return NextResponse.rewrite(new URL("/coming-soon", request.url));
 }
 
