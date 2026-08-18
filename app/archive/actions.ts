@@ -5,6 +5,7 @@ import {
   createArtist,
   createArtwork,
   createPublication,
+  getArtworkImageUploadUrl,
   linkArtworkProduct,
   unlinkArtworkProduct,
   updateArtist,
@@ -141,7 +142,7 @@ export async function createArtworkEntry(
     .getAll("productHandles")
     .map((value) => String(value).trim())
     .filter(Boolean);
-  const image = formData.get("image");
+  const imageStagingKey = String(formData.get("stagingKey") ?? "").trim();
 
   if (!title) {
     return { error: "Title is required." };
@@ -158,7 +159,7 @@ export async function createArtworkEntry(
     placement || null,
     description,
     productHandles,
-    image instanceof File && image.size > 0 ? image : null,
+    imageStagingKey || null,
   );
   if (error || !slug) {
     return { error: error ?? "Failed to create entry." };
@@ -167,19 +168,35 @@ export async function createArtworkEntry(
   redirect(`/archive/artworks/${slug}`);
 }
 
+// Step 1 of the direct-to-R2 upload flow — called before any file bytes
+// move, returns a presigned PUT URL the browser uploads straight to R2
+// with (see components/archive/artwork-image-upload.tsx and
+// new-artwork-form.tsx). Bypasses Vercel's serverless function body-size
+// ceiling entirely, which routing raw files through a Server Action hit in
+// production regardless of any bodySizeLimit config (a hard platform
+// limit that config can't raise).
+export async function getArtworkImageUploadUrlAction(
+  contentType: string,
+): Promise<{ uploadUrl?: string; stagingKey?: string; error?: string }> {
+  await requireAdmin();
+  return getArtworkImageUploadUrl(contentType);
+}
+
+// Step 2 — called once the browser has already PUT the file directly to
+// R2 at `stagingKey`. No file bytes in this call, just a small string, so
+// it's never at risk of hitting the same body-size ceiling.
 export async function uploadArtworkImageAction(
   artworkId: string,
   artworkSlug: string,
-  formData: FormData,
+  stagingKey: string,
 ): Promise<{ imagePath?: string; error?: string }> {
   await requireAdmin();
 
-  const image = formData.get("image");
-  if (!(image instanceof File) || image.size === 0) {
-    return { error: "No image file selected." };
+  if (!stagingKey) {
+    return { error: "No image uploaded." };
   }
 
-  return uploadArtworkImage(artworkId, artworkSlug, image);
+  return uploadArtworkImage(artworkId, artworkSlug, stagingKey);
 }
 
 export async function linkArtworkProductAction(

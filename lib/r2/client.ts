@@ -1,6 +1,12 @@
 import "server-only";
 
-import { S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Server-only R2 client for archive image uploads. R2 is accessed through
 // its S3-compatible API (`region: "auto"` — R2 buckets aren't
@@ -58,4 +64,45 @@ export function getR2Client(): S3Client {
 
 export function getR2BucketName(): string {
   return parseApiDomain().bucketName;
+}
+
+// Presigned PUT URL for a direct browser-to-R2 upload — bypasses Vercel's
+// serverless function request-body ceiling entirely (a hard platform
+// limit, ~4.5MB on the Hobby plan, that no Next.js config can raise) since
+// the file bytes never pass through a Server Action. 5 minute expiry: long
+// enough for a real upload, short enough that an abandoned URL isn't a
+// standing write hole.
+export async function getR2PresignedUploadUrl(
+  key: string,
+  contentType: string,
+): Promise<string> {
+  return getSignedUrl(
+    getR2Client(),
+    new PutObjectCommand({
+      Bucket: getR2BucketName(),
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn: 300 },
+  );
+}
+
+// Pulls bytes back down server-side for processing (e.g. the sharp resize
+// step) after a direct browser-to-R2 upload — server-to-R2 traffic has no
+// Vercel body-size constraint, only the inbound request *to* Vercel did.
+export async function getR2ObjectBytes(key: string): Promise<Uint8Array> {
+  const result = await getR2Client().send(
+    new GetObjectCommand({ Bucket: getR2BucketName(), Key: key }),
+  );
+  const bytes = await result.Body?.transformToByteArray();
+  if (!bytes) {
+    throw new Error(`R2 object at key "${key}" has no body.`);
+  }
+  return bytes;
+}
+
+export async function deleteR2Object(key: string): Promise<void> {
+  await getR2Client().send(
+    new DeleteObjectCommand({ Bucket: getR2BucketName(), Key: key }),
+  );
 }

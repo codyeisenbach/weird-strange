@@ -6,7 +6,7 @@ import { useRef, useState, useTransition } from "react";
 
 // Admin-only image upload for an existing artwork. Unlike the create
 // form's plain <input type="file">, this one uploads immediately on
-// selection (via a Server Action, same useTransition pattern as
+// selection (via Server Actions, same useTransition pattern as
 // LinkedProductsEditor) since — unlike creation — there's already an
 // artwork id/slug to upload against, so there's no reason to wait for a
 // separate form submit. The server-rendered infobox (a sibling, passed
@@ -15,21 +15,32 @@ import { useRef, useState, useTransition } from "react";
 // upload calls router.refresh() to re-fetch the page's server data (now
 // pointing at the new image via the cache tag the upload already busts)
 // rather than trying to thread the new URL through a prop chain.
+//
+// The actual upload is a 3-step sequence, not one action call: get a
+// presigned URL, PUT the file directly to R2 from the browser (bypasses
+// Vercel's serverless function body-size ceiling — a hard platform limit
+// that routing the file through a Server Action hit in production on any
+// real-world image size), then tell the server to process what's now
+// staged in R2. No file bytes ever go through a Server Action.
 export function ArtworkImageUpload({
   artworkId,
   artworkSlug,
   currentImagePath,
   currentImageAlt,
+  getUploadUrlAction,
   uploadAction,
 }: {
   artworkId: string;
   artworkSlug: string;
   currentImagePath: string | null;
   currentImageAlt: string | null;
+  getUploadUrlAction: (
+    contentType: string,
+  ) => Promise<{ uploadUrl?: string; stagingKey?: string; error?: string }>;
   uploadAction: (
     artworkId: string,
     artworkSlug: string,
-    formData: FormData,
+    stagingKey: string,
   ) => Promise<{ imagePath?: string; error?: string }>;
 }) {
   const router = useRouter();
@@ -43,11 +54,29 @@ export function ArtworkImageUpload({
     if (!file) return;
 
     setError(null);
-    const formData = new FormData();
-    formData.set("image", file);
 
     startTransition(async () => {
-      const result = await uploadAction(artworkId, artworkSlug, formData);
+      const {
+        uploadUrl,
+        stagingKey,
+        error: presignError,
+      } = await getUploadUrlAction(file.type);
+      if (presignError || !uploadUrl || !stagingKey) {
+        setError(presignError ?? "Failed to prepare upload.");
+        return;
+      }
+
+      const putResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putResponse.ok) {
+        setError("Failed to upload image.");
+        return;
+      }
+
+      const result = await uploadAction(artworkId, artworkSlug, stagingKey);
       if (result.error) {
         setError(result.error);
         return;

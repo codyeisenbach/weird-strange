@@ -1,4 +1,7 @@
-import { createArtworkEntry } from "app/archive/actions";
+import {
+  createArtworkEntry,
+  getArtworkImageUploadUrlAction,
+} from "app/archive/actions";
 import { ArchiveTile } from "components/archive/tile";
 import { NewArtworkForm } from "components/archive/new-artwork-form";
 import { getAdminUser } from "lib/admin/auth";
@@ -31,6 +34,7 @@ export default async function ArtworksPage() {
             artists={artists}
             publications={publications}
             allProducts={allProducts}
+            getImageUploadUrlAction={getArtworkImageUploadUrlAction}
             action={createArtworkEntry}
           />
         </div>

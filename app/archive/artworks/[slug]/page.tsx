@@ -1,4 +1,5 @@
 import {
+  getArtworkImageUploadUrlAction,
   linkArtworkProductAction,
   saveArtworkEdit,
   unlinkArtworkProductAction,
@@ -183,6 +184,7 @@ export default async function ArtworkPage(props: {
               artworkSlug={artwork.slug}
               currentImagePath={artwork.imagePath}
               currentImageAlt={artwork.imageAlt}
+              getUploadUrlAction={getArtworkImageUploadUrlAction}
               uploadAction={uploadArtworkImageAction}
             />
           </WikiSection>

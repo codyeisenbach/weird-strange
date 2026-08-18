@@ -7,7 +7,13 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 import { getProducts } from "lib/shopify";
 import { getSupabaseServerClient } from "lib/supabase/server";
-import { getR2BucketName, getR2Client } from "lib/r2/client";
+import {
+  deleteR2Object,
+  getR2BucketName,
+  getR2Client,
+  getR2ObjectBytes,
+  getR2PresignedUploadUrl,
+} from "lib/r2/client";
 import { requireAdmin } from "lib/admin/auth";
 import type { Product } from "lib/shopify/types";
 import {
@@ -689,7 +695,7 @@ export async function createArtwork(
   placement: string | null,
   description: string,
   productHandles: string[] = [],
-  image: File | null = null,
+  imageStagingKey: string | null = null,
 ): Promise<{ slug?: string; error?: string }> {
   await requireAdmin();
   const baseSlug = slugify(title);
@@ -729,14 +735,14 @@ export async function createArtwork(
     }
   }
 
-  if (image) {
+  if (imageStagingKey) {
     // Same reasoning as the product-link failure above: the artwork
-    // already exists, so an image upload failure shouldn't fail the whole
-    // create — the admin can retry the upload from the detail page.
+    // already exists, so an image processing failure shouldn't fail the
+    // whole create — the admin can retry the upload from the detail page.
     const { error: imageError } = await uploadArtworkImage(
       row.id,
       row.slug,
-      image,
+      imageStagingKey,
     );
     if (imageError) {
       console.error(
@@ -773,26 +779,66 @@ const ALLOWED_IMAGE_TYPES = new Set([
 const MAX_IMAGE_DIMENSION = 1600;
 const WEBP_QUALITY = 85;
 
+// Step 1 of the upload flow: get a presigned URL the browser can PUT
+// directly to R2, bypassing Vercel's serverless function request-body
+// ceiling entirely (a hard platform limit — ~4.5MB on the Hobby plan —
+// that no Next.js config can raise; routing the raw file through a Server
+// Action was the original design and 413'd on any real-world image size).
+// The staged file lives outside archive/artworks/ (never a real public
+// path) until uploadArtworkImage() below processes and moves it.
+export async function getArtworkImageUploadUrl(
+  contentType: string,
+): Promise<{ uploadUrl?: string; stagingKey?: string; error?: string }> {
+  await requireAdmin();
+
+  if (!ALLOWED_IMAGE_TYPES.has(contentType)) {
+    return { error: "File must be a JPEG, PNG, WebP, or GIF image." };
+  }
+
+  const stagingKey = `archive/_staging/${crypto.randomUUID()}`;
+  const uploadUrl = await getR2PresignedUploadUrl(stagingKey, contentType);
+  return { uploadUrl, stagingKey };
+}
+
+// Step 2: called once the browser has PUT the file directly to
+// `stagingKey` (see getArtworkImageUploadUrl above). Downloads it back
+// server-side — server-to-R2 traffic has no Vercel body-size constraint,
+// only the inbound request *to* Vercel did — runs the same sharp
+// downscale/re-encode pipeline as always, uploads the result to the real
+// public key, and deletes the staging object.
 export async function uploadArtworkImage(
   artworkId: string,
   artworkSlug: string,
-  file: File,
+  stagingKey: string,
   imageAlt?: string,
 ): Promise<{ imagePath?: string; error?: string }> {
   await requireAdmin();
 
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-    return { error: "File must be a JPEG, PNG, WebP, or GIF image." };
+  let staged: Uint8Array;
+  try {
+    staged = await getR2ObjectBytes(stagingKey);
+  } catch (fetchError) {
+    console.error(
+      `Failed to fetch staged image '${stagingKey}' for artwork '${artworkId}':`,
+      fetchError,
+    );
+    return { error: "Failed to process image." };
   }
 
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+  // Defense in depth, not the primary gate anymore — the primary size
+  // limit is now whatever R2 itself allows for a direct PUT, which is far
+  // higher than this. Kept so a malicious direct-to-R2 upload (bypassing
+  // any client-side size hint) still can't push an oversized file through
+  // the sharp/DB-write path below.
+  if (staged.byteLength > MAX_IMAGE_SIZE_BYTES) {
+    await deleteR2Object(stagingKey).catch(() => {});
     return { error: "Image must be smaller than 8MB." };
   }
 
   let resized: Buffer;
   try {
     const sharp = (await import("sharp")).default;
-    resized = await sharp(await file.arrayBuffer())
+    resized = await sharp(staged)
       .resize({
         width: MAX_IMAGE_DIMENSION,
         height: MAX_IMAGE_DIMENSION,
@@ -833,6 +879,16 @@ export async function uploadArtworkImage(
     );
     return { error: "Failed to upload image." };
   }
+
+  // Best-effort cleanup — a leftover staging object under archive/_staging/
+  // isn't a functional problem (it's never a live public path), just
+  // storage that isn't reclaimed, so don't fail the whole upload over it.
+  deleteR2Object(stagingKey).catch((cleanupError) => {
+    console.error(
+      `Uploaded image for artwork '${artworkId}', but failed to delete staging object '${stagingKey}':`,
+      cleanupError,
+    );
+  });
 
   const supabase = getSupabaseServerClient();
   const { error: dbError } = await supabase
