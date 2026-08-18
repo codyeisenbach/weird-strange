@@ -58,22 +58,34 @@ export function getVariantForColor(
   );
 }
 
-// Determines which color a product card should default to: the first color
-// (in option order) with an available variant, falling back to the first
-// color value at all if none are available. Undefined for products with no
-// color option.
+// Determines which color a product card should default to: the color of
+// whichever variant is assigned the product's featuredImage (Shopify's own
+// "this is the photo to lead with" signal — set by the merchant reordering
+// images in admin), so the card agrees with what they actually featured
+// instead of an option-list ordering they may not have curated at all.
+// Falls back to the first color with an available variant — then the first
+// color value outright — for the rare case featuredImage matches no
+// variant (e.g. it's a lifestyle shot not assigned to any variant).
+// Undefined for products with no color option.
 export function getDefaultColor(
-  product: Pick<Product, "options" | "variants">,
+  product: Pick<Product, "options" | "variants" | "featuredImage">,
 ): string | undefined {
   const colorOption = getColorOption(product.options);
   if (!colorOption) return undefined;
 
+  const featuredColor = colorOption.values.find((color) => {
+    const variant = getVariantForColor(product, color);
+    return variant?.image?.id && variant.image.id === product.featuredImage?.id;
+  });
+
   return (
+    featuredColor ??
     colorOption.values.find((color) =>
       product.variants.some(
         (variant) => variant.availableForSale && hasColor(variant, color),
       ),
-    ) ?? colorOption.values[0]
+    ) ??
+    colorOption.values[0]
   );
 }
 
@@ -117,55 +129,56 @@ export function getVariantSearchParams(
   return params.toString();
 }
 
-const THUMB2_FILENAME_PATTERN = /_thumb2\b/i;
+// Hover-image filename convention: "<anything>_<color>_hover.<ext>", e.g.
+// "tiger-tee_black_hover.jpg". Written with `~` as the delimiter when
+// renaming in Shopify admin (tiger-tee~black~hover.jpg) — Shopify silently
+// converts `~` to `_` in filenames, so `_` is what actually reaches the
+// Storefront API and is what this pattern matches on. `color` is matched
+// case-insensitively against the product's Color option values (so color
+// names must not themselves contain underscores, e.g. use "offwhite" not
+// "off_white", or the segment split below won't isolate it correctly).
+// The role is always literally "hover" — a product can have several extra
+// photos per color (multiple back/detail angles from Printify), and this
+// tag doesn't mean "this is a back shot," it means "this is specifically
+// the one to swap to on hover" — so at most one image per color should
+// carry it; any other extra photos for that color are simply left
+// untagged. This is a merchant-typed convention (same category as the old
+// alt-text/`_thumb2` approach it replaces) — the Storefront API has no
+// field for "this photo is variant X's hover shot," see
+// getVariantForColor()'s doc comment — but unlike alt text or image order,
+// it's unambiguous: the color is read directly off the one image in
+// question, not inferred from surrounding images or free text a human
+// might phrase inconsistently.
+const HOVER_FILENAME_PATTERN = /_([^_]+)_hover(?:\.[^.]+)?$/i;
 
-function isThumb2Image(image: Image) {
+function parseHoverColor(image: Image): string | undefined {
   const filename = image.url.split("/").pop()?.split("?")[0] ?? "";
-  return THUMB2_FILENAME_PATTERN.test(filename);
+  return filename.match(HOVER_FILENAME_PATTERN)?.[1];
 }
 
-// True when `image` is the Shopify-designated photo for one of the variants
-// matching `color` — a same-image comparison (by id, falling back to url for
-// images Shopify didn't assign an id to) against each such variant's own
-// `image` field, not a match against merchant-typed alt text. A variant with
-// no image of its own inherits the product's featuredImage from the
-// Storefront API, so featuredImage is excluded from this comparison to avoid
-// crediting every imageless variant with matching it.
-function isDesignatedImageForColor(
-  product: Pick<Product, "variants" | "featuredImage">,
-  image: Image,
-  color: string,
-): boolean {
-  return product.variants.some((variant) => {
-    if (!hasColor(variant, color)) return false;
-    if (!variant.image) return false;
-    if (variant.image.url === product.featuredImage?.url) return false;
-
-    return variant.image.id
-      ? variant.image.id === image.id
-      : variant.image.url === image.url;
-  });
+function matchesParsedColor(parsedColor: string, color: string) {
+  return parsedColor.toLowerCase() === color.toLowerCase();
 }
 
-// Finds the merchant-designated "_thumb2" image (a filename convention set
-// in Shopify admin, same mechanism as the primary thumbnail) to swap to on
-// product-card hover. When the product has a color option, only a _thumb2
-// image that's some same-color variant's own designated image is used, so
-// hovering never flashes a different color's photo; falls back to any
-// _thumb2 image otherwise (colorless products, or one shared across colors).
+// Finds the image tagged as the hover-swap shot (see filename convention
+// above) for the given color. Returns undefined — no swap, rather than
+// risking another color's photo — when the product has a color option but
+// no image is tagged as this color's hover shot.
 export function getHoverImage(
-  product: Pick<Product, "options" | "images" | "variants" | "featuredImage">,
+  product: Pick<Product, "options" | "images">,
   color: string | undefined,
 ): Image | undefined {
-  const thumb2Images = product.images.filter(isThumb2Image);
-  if (!thumb2Images.length) return undefined;
+  const hoverImages = product.images
+    .map((image) => ({ image, color: parseHoverColor(image) }))
+    .filter(
+      (entry): entry is { image: Image; color: string } =>
+        entry.color !== undefined,
+    );
+  if (!hoverImages.length) return undefined;
 
   const colorOption = getColorOption(product.options);
-  if (!color || !colorOption) return thumb2Images[0];
+  if (!color || !colorOption) return hoverImages[0]?.image;
 
-  return (
-    thumb2Images.find((image) =>
-      isDesignatedImageForColor(product, image, color),
-    ) ?? thumb2Images[0]
-  );
+  return hoverImages.find((entry) => matchesParsedColor(entry.color, color))
+    ?.image;
 }
