@@ -217,14 +217,6 @@ async function OrderDetail({
         </div>
         <div className="flex flex-col items-end gap-2">
           <StatusBadge status={getDisplayStatus(order)} />
-          <a
-            href={order.statusPageUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-ws-text-muted underline hover:text-ws-charcoal"
-          >
-            View order status
-          </a>
         </div>
       </div>
 
