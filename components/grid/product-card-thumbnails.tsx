@@ -62,8 +62,8 @@ export function ProductCardThumbnails({
           {images.map((image, i) => (
             <span
               key={image.id ?? image.url}
-              className={`h-2.5 w-2.5 rounded-full ${
-                i === selectedIndex ? "bg-ws-charcoal" : "bg-ws-text-muted"
+              className={`h-2 w-2 rounded-full ${
+                i === selectedIndex ? "bg-ws-charcoal" : "bg-ws-charcoal/25"
               }`}
             />
           ))}
