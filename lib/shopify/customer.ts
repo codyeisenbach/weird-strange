@@ -148,6 +148,86 @@ export type Customer = {
   emailAddress: { emailAddress: string } | null;
 };
 
+export type OrderMoney = {
+  amount: string;
+  currencyCode: string;
+};
+
+export type OrderLineItem = {
+  title: string;
+  quantity: number;
+  image: { url: string; altText: string | null } | null;
+  price: OrderMoney;
+  totalPrice: OrderMoney;
+};
+
+export type Order = {
+  id: string;
+  name: string;
+  processedAt: string;
+  financialStatus: string | null;
+  fulfillmentStatus: string | null;
+  statusPageUrl: string;
+  subtotal: OrderMoney | null;
+  totalTax: OrderMoney | null;
+  totalShipping: OrderMoney | null;
+  totalPrice: OrderMoney;
+  lineItems: { nodes: OrderLineItem[] };
+};
+
+export type OrderConnection = {
+  nodes: Order[];
+  pageInfo: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    startCursor: string | null;
+    endCursor: string | null;
+  };
+};
+
+const ORDER_FIELDS = `
+  id
+  name
+  processedAt
+  financialStatus
+  fulfillmentStatus
+  statusPageUrl
+  subtotal {
+    amount
+    currencyCode
+  }
+  totalTax {
+    amount
+    currencyCode
+  }
+  totalShipping {
+    amount
+    currencyCode
+  }
+  totalPrice {
+    amount
+    currencyCode
+  }
+  lineItems(first: 50) {
+    nodes {
+      title
+      quantity
+      image {
+        url
+        altText
+      }
+      price {
+        amount
+        currencyCode
+      }
+      totalPrice {
+        amount
+        currencyCode
+      }
+    }
+  }
+`;
+
 export type CustomerSession = {
   accessToken: string | undefined;
   refreshToken: string | undefined;
@@ -197,4 +277,87 @@ export async function getCustomer(
   if (body.errors || !body.data?.customer) return null;
 
   return body.data.customer;
+}
+
+export async function getCustomerOrders(
+  accessToken: string,
+  {
+    first,
+    after,
+    last,
+    before,
+  }: { first?: number; after?: string; last?: number; before?: string } = {},
+): Promise<OrderConnection | null> {
+  // Shopify's connection model requires forward (first/after) and backward
+  // (last/before) pagination args to be mutually exclusive.
+  const variables = before
+    ? { last: last ?? 10, before }
+    : { first: first ?? 10, after };
+
+  const res = await fetch(customerApiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: accessToken,
+    },
+    body: JSON.stringify({
+      query: `
+        query getCustomerOrders($first: Int, $after: String, $last: Int, $before: String) {
+          customer {
+            orders(first: $first, after: $after, last: $last, before: $before, sortKey: PROCESSED_AT, reverse: true) {
+              nodes {
+                ${ORDER_FIELDS}
+              }
+              pageInfo {
+                hasNextPage
+                hasPreviousPage
+                startCursor
+                endCursor
+              }
+            }
+          }
+        }
+      `,
+      variables,
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) return null;
+
+  const body = await res.json();
+  if (body.errors || !body.data?.customer) return null;
+
+  return body.data.customer.orders;
+}
+
+export async function getCustomerOrder(
+  accessToken: string,
+  orderId: string,
+): Promise<Order | null> {
+  const res = await fetch(customerApiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: accessToken,
+    },
+    body: JSON.stringify({
+      query: `
+        query getCustomerOrder($id: ID!) {
+          order(id: $id) {
+            ${ORDER_FIELDS}
+          }
+        }
+      `,
+      variables: { id: orderId },
+    }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) return null;
+
+  const body = await res.json();
+  if (body.errors || !body.data?.order) return null;
+
+  return body.data.order;
 }
