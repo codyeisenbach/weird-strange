@@ -41,7 +41,7 @@ export function WikiInfobox({
 }) {
   return (
     <aside className="w-full shrink-0 border border-neutral-300 bg-neutral-50 text-sm sm:float-right sm:ml-6 sm:w-72 dark:border-neutral-700 dark:bg-neutral-900">
-      <div className="border-b border-neutral-300 bg-neutral-100 px-3 py-2 text-center font-serif text-base font-semibold text-ws-charcoal dark:border-neutral-700 dark:bg-neutral-800">
+      <div className="border-b border-neutral-300 bg-neutral-100 px-3 py-2 text-center font-serif text-base font-semibold text-ws-charcoal dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-50">
         {title}
       </div>
       {src ? (
@@ -64,10 +64,12 @@ export function WikiInfobox({
                 key={fact.label}
                 className="border-b border-neutral-200 align-top last:border-0 dark:border-neutral-800"
               >
-                <th className="w-24 px-3 py-2 text-left font-medium text-neutral-500">
+                <th className="w-24 px-3 py-2 text-left font-medium text-neutral-500 dark:text-neutral-300">
                   {fact.label}
                 </th>
-                <td className="px-3 py-2 text-ws-charcoal">{fact.value}</td>
+                <td className="px-3 py-2 text-ws-charcoal dark:text-neutral-50">
+                  {fact.value}
+                </td>
               </tr>
             ))}
           </tbody>
