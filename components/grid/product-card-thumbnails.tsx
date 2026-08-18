@@ -58,11 +58,11 @@ export function ProductCardThumbnails({
         </ul>
       </div>
       {images.length > 1 ? (
-        <div className="mt-2 flex justify-center gap-1.5">
+        <div className="flex justify-center gap-1.5 py-4">
           {images.map((image, i) => (
             <span
               key={image.id ?? image.url}
-              className={`h-2.5 w-2.5 rounded-full border border-ws-charcoal ${
+              className={`h-2.5 w-2.5 rounded-full ${
                 i === selectedIndex ? "bg-ws-charcoal" : "bg-gray-200"
               }`}
             />
