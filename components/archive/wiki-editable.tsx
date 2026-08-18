@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { EditFormState } from "app/archive/actions";
 import { ArticleBody } from "./wiki-article";
+import { RichTextEditor } from "./rich-text-editor";
 
 // Wikipedia-style edit-in-place for an archive entry's title + body text.
 // This duplicates WikiArticle's header/body layout (h1, subtitle, hr, body,
@@ -135,15 +136,11 @@ export function WikiEditable({
               />
             </label>
           ))}
-          <label className="flex flex-col gap-1 text-sm">
-            {bodyLabel}
-            <textarea
-              name={bodyFieldName}
-              defaultValue={current.body}
-              rows={10}
-              className="border border-ws-border bg-transparent px-3 py-2 font-serif text-[17px] leading-7 outline-none focus:border-ws-charcoal"
-            />
-          </label>
+          <RichTextEditor
+            name={bodyFieldName}
+            label={bodyLabel}
+            initialValue={current.body}
+          />
           {state?.error ? (
             <p className="text-sm text-red-600 dark:text-red-400">
               {state.error}

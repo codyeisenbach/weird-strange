@@ -5,6 +5,7 @@ import type { EditFormState } from "app/archive/actions";
 import type { Artist, Publication } from "lib/archive/types";
 import type { Product } from "lib/shopify/types";
 import { ProductPicker } from "./product-picker";
+import { RichTextEditor } from "./rich-text-editor";
 
 // Admin-only "+ New artwork" affordance, mirroring NewEntryForm's
 // toggle-button-to-form pattern, but with the extra artist/publication
@@ -164,14 +165,7 @@ export function NewArtworkForm({
           </select>
         </label>
       </div>
-      <label className="flex flex-col gap-1 text-sm">
-        Description
-        <textarea
-          name="description"
-          rows={6}
-          className="border border-ws-border bg-transparent px-3 py-2 font-serif text-[17px] leading-7 outline-none focus:border-ws-charcoal"
-        />
-      </label>
+      <RichTextEditor name="description" label="Description" initialValue="" />
 
       <label className="flex flex-col gap-1 text-sm">
         Image

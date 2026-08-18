@@ -1,4 +1,5 @@
 import { siteName, siteUrl } from "lib/site-config";
+import { htmlToPlainText } from "lib/archive/sanitize";
 import type {
   ArtistDetail,
   ArtworkDetail,
@@ -61,7 +62,9 @@ function buildArtworkIsBasedOn(artworks: ArtworkDetail[]) {
   const isBasedOn = artworks.map((artwork) => ({
     "@type": "CreativeWork",
     name: artwork.title,
-    description: artwork.description || undefined,
+    description: artwork.description
+      ? htmlToPlainText(artwork.description)
+      : undefined,
     ...buildArtworkCreatorAndSeries(artwork),
   }));
 
@@ -76,7 +79,7 @@ export function buildPersonJsonLd(artist: ArtistDetail, url: string) {
     "@context": "https://schema.org",
     "@type": "Person",
     name: artist.name,
-    description: artist.bio || undefined,
+    description: artist.bio ? htmlToPlainText(artist.bio) : undefined,
     image: artist.imagePath || undefined,
     url,
   };
@@ -90,7 +93,9 @@ export function buildCreativeWorkSeriesJsonLd(
     "@context": "https://schema.org",
     "@type": "CreativeWorkSeries",
     name: publication.title,
-    description: publication.description || undefined,
+    description: publication.description
+      ? htmlToPlainText(publication.description)
+      : undefined,
     image: publication.imagePath || undefined,
     datePublished: publication.issueDate || undefined,
     url,
@@ -108,7 +113,9 @@ export function buildArtworkCreativeWorkJsonLd(
     "@context": "https://schema.org",
     "@type": "CreativeWork",
     name: artwork.title,
-    description: artwork.description || undefined,
+    description: artwork.description
+      ? htmlToPlainText(artwork.description)
+      : undefined,
     image: artwork.imagePath || undefined,
     url,
     ...buildArtworkCreatorAndSeries(artwork),

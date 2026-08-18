@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { EditFormState } from "app/archive/actions";
 import type { Artist, Publication } from "lib/archive/types";
 import { ArticleBody } from "./wiki-article";
+import { RichTextEditor } from "./rich-text-editor";
 
 export type ArtworkEditableFields = {
   title: string;
@@ -139,15 +140,11 @@ export function WikiEditableArtwork({
               />
             </label>
           </div>
-          <label className="flex flex-col gap-1 text-sm">
-            Description
-            <textarea
-              name="description"
-              defaultValue={current.description}
-              rows={10}
-              className="border border-ws-border bg-transparent px-3 py-2 font-serif text-[17px] leading-7 outline-none focus:border-ws-charcoal"
-            />
-          </label>
+          <RichTextEditor
+            name="description"
+            label="Description"
+            initialValue={current.description}
+          />
           {state?.error ? (
             <p className="text-sm text-red-600 dark:text-red-400">
               {state.error}

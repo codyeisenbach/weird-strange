@@ -15,6 +15,7 @@ import {
   getR2PresignedUploadUrl,
 } from "lib/r2/client";
 import { requireAdmin } from "lib/admin/auth";
+import { sanitizeArticleHtml } from "./sanitize";
 import type { Product } from "lib/shopify/types";
 import {
   Artist,
@@ -533,10 +534,11 @@ export async function updateArtist(
   edit: ArtistTextEdit,
 ): Promise<{ error?: string }> {
   await requireAdmin();
+  const bio = edit.bio ? sanitizeArticleHtml(edit.bio) : "";
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("artists")
-    .update({ name: edit.name, bio: edit.bio || null })
+    .update({ name: edit.name, bio: bio || null })
     .eq("id", id);
 
   if (error) {
@@ -556,12 +558,15 @@ export async function updatePublication(
   edit: PublicationTextEdit,
 ): Promise<{ error?: string }> {
   await requireAdmin();
+  const description = edit.description
+    ? sanitizeArticleHtml(edit.description)
+    : "";
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("publications")
     .update({
       title: edit.title,
-      description: edit.description || null,
+      description: description || null,
       issue_date: edit.issueDate || null,
     })
     .eq("id", id);
@@ -581,6 +586,9 @@ export async function updateArtwork(
   edit: ArtworkEdit,
 ): Promise<{ error?: string }> {
   await requireAdmin();
+  const description = edit.description
+    ? sanitizeArticleHtml(edit.description)
+    : "";
   const supabase = getSupabaseServerClient();
   const { error } = await supabase
     .from("artworks")
@@ -589,7 +597,7 @@ export async function updateArtwork(
       artist_id: edit.artistId,
       publication_id: edit.publicationId,
       placement: edit.placement || null,
-      description: edit.description || null,
+      description: description || null,
     })
     .eq("id", id);
 
@@ -655,11 +663,12 @@ export async function createArtist(
   await requireAdmin();
   const baseSlug = slugify(name);
   if (!baseSlug) return { error: "Name must contain at least one letter." };
+  const sanitizedBio = bio ? sanitizeArticleHtml(bio) : "";
 
   const { row, error } = await insertWithUniqueSlug<{ slug: string }>(
     "artists",
     baseSlug,
-    (slug) => ({ slug, name, bio: bio || null }),
+    (slug) => ({ slug, name, bio: sanitizedBio || null }),
   );
 
   if (error || !row) return { error };
@@ -675,11 +684,18 @@ export async function createPublication(
   await requireAdmin();
   const baseSlug = slugify(title);
   if (!baseSlug) return { error: "Title must contain at least one letter." };
+  const sanitizedDescription = description
+    ? sanitizeArticleHtml(description)
+    : "";
 
   const { row, error } = await insertWithUniqueSlug<{ slug: string }>(
     "publications",
     baseSlug,
-    (slug) => ({ slug, title, description: description || null }),
+    (slug) => ({
+      slug,
+      title,
+      description: sanitizedDescription || null,
+    }),
   );
 
   if (error || !row) return { error };
@@ -700,6 +716,9 @@ export async function createArtwork(
   await requireAdmin();
   const baseSlug = slugify(title);
   if (!baseSlug) return { error: "Title must contain at least one letter." };
+  const sanitizedDescription = description
+    ? sanitizeArticleHtml(description)
+    : "";
 
   const { row, error } = await insertWithUniqueSlug<{
     id: string;
@@ -710,7 +729,7 @@ export async function createArtwork(
     artist_id: artistId,
     publication_id: publicationId,
     placement: placement || null,
-    description: description || null,
+    description: sanitizedDescription || null,
   }));
 
   if (error || !row) return { error };

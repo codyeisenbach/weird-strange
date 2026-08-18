@@ -1,28 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { htmlToPlainText } from "lib/archive/sanitize";
 
 export type InfoboxFact = {
   label: string;
   value: ReactNode;
 };
 
-function paragraphsFromPlainText(text: string): string[] {
-  return text
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-}
-
+// `text` is HTML, sanitized at write time (see lib/archive/sanitize.ts) —
+// rendering it here trusts the DB as the sanitization boundary, not the
+// browser. htmlToPlainText is only used to check whether there's any real
+// content (an editor can produce "<p></p>" for an empty doc, which isn't
+// an empty string but also isn't real article text).
 export function ArticleBody({ text }: { text: string | null }) {
-  const paragraphs = text ? paragraphsFromPlainText(text) : [];
+  const hasContent = text ? htmlToPlainText(text).length > 0 : false;
 
-  return paragraphs.length > 0 ? (
-    <div className="space-y-4 text-[17px] leading-7">
-      {paragraphs.map((paragraph, index) => (
-        <p key={index}>{paragraph}</p>
-      ))}
-    </div>
+  return hasContent ? (
+    <div
+      className="space-y-4 text-[17px] leading-7 [&_a]:text-blue-700 [&_a]:hover:underline [&_a]:dark:text-blue-400 [&_h2]:mt-6 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:font-normal [&_h3]:mt-4 [&_h3]:font-serif [&_h3]:text-xl [&_h3]:font-normal [&_li]:ml-5 [&_ol]:list-decimal [&_ul]:list-disc"
+      dangerouslySetInnerHTML={{ __html: text as string }}
+    />
   ) : (
     <p className="font-sans text-sm text-neutral-500 italic">
       No article text yet.

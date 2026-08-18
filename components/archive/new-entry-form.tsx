@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import type { EditFormState } from "app/archive/actions";
+import { RichTextEditor } from "./rich-text-editor";
 
 // Admin-only "+ New" affordance for the archive list pages. Toggles between
 // a button and an inline create form (name/title + bio/description). On
@@ -55,14 +56,7 @@ export function NewEntryForm({
           className="border border-ws-border bg-transparent px-3 py-2 text-base outline-none focus:border-ws-charcoal"
         />
       </label>
-      <label className="flex flex-col gap-1 text-sm">
-        {bodyLabel}
-        <textarea
-          name={bodyFieldName}
-          rows={6}
-          className="border border-ws-border bg-transparent px-3 py-2 font-serif text-[17px] leading-7 outline-none focus:border-ws-charcoal"
-        />
-      </label>
+      <RichTextEditor name={bodyFieldName} label={bodyLabel} initialValue="" />
       {state?.error ? (
         <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
       ) : null}
