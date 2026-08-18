@@ -161,6 +161,16 @@ export type OrderLineItem = {
   totalPrice: OrderMoney;
 };
 
+export type OrderFulfillment = {
+  status: string;
+  estimatedDeliveryAt: string | null;
+  trackingInformation: {
+    number: string | null;
+    url: string | null;
+    company: string | null;
+  }[];
+};
+
 export type Order = {
   id: string;
   name: string;
@@ -173,6 +183,7 @@ export type Order = {
   totalShipping: OrderMoney | null;
   totalPrice: OrderMoney;
   lineItems: { nodes: OrderLineItem[] };
+  fulfillments: { nodes: OrderFulfillment[] };
 };
 
 export type OrderConnection = {
@@ -223,6 +234,17 @@ const ORDER_FIELDS = `
       totalPrice {
         amount
         currencyCode
+      }
+    }
+  }
+  fulfillments(first: 10) {
+    nodes {
+      status
+      estimatedDeliveryAt
+      trackingInformation {
+        number
+        url
+        company
       }
     }
   }

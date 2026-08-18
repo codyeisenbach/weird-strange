@@ -4,6 +4,8 @@ import {
   getCustomerOrder,
   getCustomerOrders,
   getCustomerSession,
+  type Order,
+  type OrderFulfillment,
   type OrderLineItem,
 } from "lib/shopify/customer";
 import Price from "components/price";
@@ -132,9 +134,7 @@ async function OrderHistory({
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
-                    <StatusBadge
-                      status={order.fulfillmentStatus ?? order.financialStatus}
-                    />
+                    <StatusBadge status={getDisplayStatus(order)} />
                     <Price
                       className="text-sm font-medium"
                       amount={order.totalPrice.amount}
@@ -216,9 +216,7 @@ async function OrderDetail({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <StatusBadge
-            status={order.fulfillmentStatus ?? order.financialStatus}
-          />
+          <StatusBadge status={getDisplayStatus(order)} />
           <a
             href={order.statusPageUrl}
             target="_blank"
@@ -229,6 +227,8 @@ async function OrderDetail({
           </a>
         </div>
       </div>
+
+      <TrackingInfo fulfillments={order.fulfillments.nodes} />
 
       <ul className="border-t border-ws-border/20">
         {order.lineItems.nodes.map((item, i) => (
@@ -318,6 +318,44 @@ function OrderThumbnail({ lineItems }: { lineItems: OrderLineItem[] }) {
           src={image.url}
         />
       ) : null}
+    </div>
+  );
+}
+
+// Shopify's fulfillmentStatus stays "FULFILLED" even after a shipment is
+// delivered — a fulfillment's own status (SUCCESS = shipped, with tracking)
+// is the more specific signal, so prefer it when present.
+function getDisplayStatus(order: Order): string | null {
+  const hasShipped = order.fulfillments.nodes.some(
+    (f) => f.status === "SUCCESS",
+  );
+  if (hasShipped) return "SHIPPED";
+  return order.fulfillmentStatus ?? order.financialStatus;
+}
+
+function TrackingInfo({ fulfillments }: { fulfillments: OrderFulfillment[] }) {
+  const tracking = fulfillments.flatMap((f) => f.trackingInformation);
+  if (tracking.length === 0) return null;
+
+  return (
+    <div className="mb-6 space-y-1 border border-ws-border/20 p-4 text-sm">
+      {tracking.map((t, i) => (
+        <p key={i}>
+          {t.company ? `${t.company}: ` : "Tracking: "}
+          {t.url ? (
+            <a
+              href={t.url}
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:text-ws-charcoal"
+            >
+              {t.number ?? "Track package"}
+            </a>
+          ) : (
+            (t.number ?? "—")
+          )}
+        </p>
+      ))}
     </div>
   );
 }
