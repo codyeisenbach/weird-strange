@@ -58,28 +58,40 @@ export function getVariantForColor(
   );
 }
 
-// Determines which color a product card should default to: the color of
-// whichever variant is assigned the product's featuredImage (Shopify's own
-// "this is the photo to lead with" signal — set by the merchant reordering
-// images in admin), so the card agrees with what they actually featured
-// instead of an option-list ordering they may not have curated at all.
-// Falls back to the first color with an available variant — then the first
-// color value outright — for the rare case featuredImage matches no
-// variant (e.g. it's a lifestyle shot not assigned to any variant).
-// Undefined for products with no color option.
+// Determines which color a product card should default to. Prefers the
+// color tagged on the product's featuredImage's own filename (see the image
+// role convention below) — the merchant may feature a "back" or "detail"
+// shot rather than the variant-assigned "front" one, so featuredImage and
+// the color's variant `image` can legitimately be two different photos of
+// the same color; reading the tag off featuredImage directly (rather than
+// asking "which variant is featuredImage assigned to," which only answers
+// correctly when the merchant featured the exact photo already on a
+// variant) is what makes the two agree on color even when they disagree on
+// which specific photo. Falls back to whichever variant featuredImage IS
+// assigned to (for products predating this tagging convention), then the
+// first color with an available variant, then the first color value
+// outright. Undefined for products with no color option.
 export function getDefaultColor(
   product: Pick<Product, "options" | "variants" | "featuredImage">,
 ): string | undefined {
   const colorOption = getColorOption(product.options);
   if (!colorOption) return undefined;
 
-  const featuredColor = colorOption.values.find((color) => {
+  const taggedColor = product.featuredImage
+    ? parseImageRole(product.featuredImage)?.color
+    : undefined;
+  const featuredTagColor = taggedColor
+    ? colorOption.values.find((color) => matchesParsedColor(taggedColor, color))
+    : undefined;
+
+  const featuredVariantColor = colorOption.values.find((color) => {
     const variant = getVariantForColor(product, color);
     return variant?.image?.id && variant.image.id === product.featuredImage?.id;
   });
 
   return (
-    featuredColor ??
+    featuredTagColor ??
+    featuredVariantColor ??
     colorOption.values.find((color) =>
       product.variants.some(
         (variant) => variant.availableForSale && hasColor(variant, color),
@@ -89,15 +101,25 @@ export function getDefaultColor(
   );
 }
 
-// The image representing a given color: that color's representative
-// variant's own `image`, falling back to the product's featuredImage for
-// variants with no image of their own (e.g. products with no per-variant
-// photos set in Shopify admin).
+// The image representing a given color, for a product card. When the color
+// is the one featuredImage is tagged/assigned for, featuredImage itself is
+// used directly — preserving exactly the photo the merchant featured
+// (which may be a "back"/"detail" shot, not necessarily that color's
+// variant-assigned "front" image). Otherwise (a color other than
+// featuredImage's) falls back to that color's own variant image, then
+// featuredImage as a last resort.
 export function getColorImage(
   product: Pick<Product, "variants" | "featuredImage">,
   color: string | undefined,
 ): Image | undefined {
   if (!color) return product.featuredImage;
+
+  const featuredTagColor = product.featuredImage
+    ? parseImageRole(product.featuredImage)?.color
+    : undefined;
+  if (featuredTagColor && matchesParsedColor(featuredTagColor, color)) {
+    return product.featuredImage;
+  }
 
   const variant = getVariantForColor(product, color);
   return variant?.image ?? product.featuredImage;
