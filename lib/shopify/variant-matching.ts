@@ -129,38 +129,57 @@ export function getVariantSearchParams(
   return params.toString();
 }
 
-// Hover-image filename convention: "<anything>_<color>_hover.<ext>", e.g.
+// Image role filename convention: "<anything>_<color>_<role>.<ext>", e.g.
 // "tiger-tee_black_hover.jpg". Written with `~` as the delimiter when
 // renaming in Shopify admin (tiger-tee~black~hover.jpg) — Shopify silently
 // converts `~` to `_` in filenames, so `_` is what actually reaches the
 // Storefront API and is what this pattern matches on. `color` is matched
-// case-insensitively against the product's Color option values (so color
-// names must not themselves contain underscores, e.g. use "offwhite" not
-// "off_white", or the segment split below won't isolate it correctly).
-// The role is always literally "hover" — a product can have several extra
-// photos per color (multiple back/detail angles from Printify), and this
-// tag doesn't mean "this is a back shot," it means "this is specifically
-// the one to swap to on hover" — so at most one image per color should
-// carry it; any other extra photos for that color are simply left
-// untagged. This is a merchant-typed convention (same category as the old
-// alt-text/`_thumb2` approach it replaces) — the Storefront API has no
-// field for "this photo is variant X's hover shot," see
-// getVariantForColor()'s doc comment — but unlike alt text or image order,
-// it's unambiguous: the color is read directly off the one image in
-// question, not inferred from surrounding images or free text a human
-// might phrase inconsistently.
-const HOVER_FILENAME_PATTERN = /_([^_]+)_hover(?:\.[^.]+)?$/i;
+// case-insensitively against the product's Color option values; hyphens
+// are fine within it ("off-white"), but not underscores, since `_` is the
+// segment delimiter. `role` is one of IMAGE_ROLES below. Only "hover"
+// drives any behavior today — a product can have several extra photos per
+// color (multiple angles from Printify), and "hover" doesn't mean "this is
+// a back shot," it means "this is specifically the one to swap to on
+// hover" — so at most one image per color should carry it. The other roles
+// (front/back/front-detail/back-detail) are recorded for the merchant's
+// own organization and aren't read by any code yet. This is a
+// merchant-typed convention (same category as the old alt-text/`_thumb2`
+// approach it replaces) — the Storefront API has no field for "this photo
+// is variant X's hover shot," see getVariantForColor()'s doc comment — but
+// unlike alt text or image order, it's unambiguous: the color and role are
+// read directly off the one image in question, not inferred from
+// surrounding images or free text a human might phrase inconsistently.
+const IMAGE_ROLES = [
+  "front",
+  "back",
+  "front-detail",
+  "back-detail",
+  "hover",
+] as const;
 
-function parseHoverColor(image: Image): string | undefined {
+const IMAGE_ROLE_FILENAME_PATTERN = new RegExp(
+  `_([^_]+)_(${IMAGE_ROLES.join("|")})(?:\\.[^.]+)?$`,
+  "i",
+);
+
+function parseImageRole(
+  image: Image,
+): { color: string; role: (typeof IMAGE_ROLES)[number] } | undefined {
   const filename = image.url.split("/").pop()?.split("?")[0] ?? "";
-  return filename.match(HOVER_FILENAME_PATTERN)?.[1];
+  const match = filename.match(IMAGE_ROLE_FILENAME_PATTERN);
+  if (!match) return undefined;
+
+  return {
+    color: match[1]!,
+    role: match[2]!.toLowerCase() as (typeof IMAGE_ROLES)[number],
+  };
 }
 
 function matchesParsedColor(parsedColor: string, color: string) {
   return parsedColor.toLowerCase() === color.toLowerCase();
 }
 
-// Finds the image tagged as the hover-swap shot (see filename convention
+// Finds the image tagged with the "hover" role (see filename convention
 // above) for the given color. Returns undefined — no swap, rather than
 // risking another color's photo — when the product has a color option but
 // no image is tagged as this color's hover shot.
@@ -169,16 +188,21 @@ export function getHoverImage(
   color: string | undefined,
 ): Image | undefined {
   const hoverImages = product.images
-    .map((image) => ({ image, color: parseHoverColor(image) }))
+    .map((image) => ({ image, parsed: parseImageRole(image) }))
     .filter(
-      (entry): entry is { image: Image; color: string } =>
-        entry.color !== undefined,
+      (
+        entry,
+      ): entry is {
+        image: Image;
+        parsed: { color: string; role: "hover" };
+      } => entry.parsed?.role === "hover",
     );
   if (!hoverImages.length) return undefined;
 
   const colorOption = getColorOption(product.options);
   if (!color || !colorOption) return hoverImages[0]?.image;
 
-  return hoverImages.find((entry) => matchesParsedColor(entry.color, color))
-    ?.image;
+  return hoverImages.find((entry) =>
+    matchesParsedColor(entry.parsed.color, color),
+  )?.image;
 }
