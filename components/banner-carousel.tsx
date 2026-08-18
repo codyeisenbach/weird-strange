@@ -2,15 +2,124 @@
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import useEmblaCarousel from "embla-carousel-react";
-import Image from "next/image";
+import NextImage from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 export type BannerCarouselImage = {
-  src: string;
+  // One or more candidate photos for this slide. When more than one is
+  // given, each is measured client-side and the most portrait one is used
+  // on mobile, the most landscape one on desktop — there's no merchant-set
+  // "this is the mobile crop" tag to read (see the filename-role convention
+  // in lib/shopify/variant-matching.ts for why that's the usual approach
+  // here), so orientation is inferred from the actual pixels instead. A
+  // single-candidate slide renders that one image at every breakpoint.
+  sources: [string, ...string[]];
   alt?: string;
   href?: string;
 };
+
+// Loads an image off-DOM just to read its natural dimensions, without
+// rendering it — used to classify sources by orientation before deciding
+// which one next/image should actually render.
+function probeImageSize(
+  src: string,
+): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new window.Image();
+    img.onload = () =>
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Picks the most portrait source (smallest width/height ratio) for mobile
+// and the most landscape one (largest ratio) for desktop. Falls back to the
+// first source for both when there's only one candidate, or when none of
+// them load in time to be measured.
+function useResponsiveSource(sources: [string, ...string[]]) {
+  const [mobileSrc, setMobileSrc] = useState(sources[0]);
+  const [desktopSrc, setDesktopSrc] = useState(sources[0]);
+
+  useEffect(() => {
+    if (sources.length < 2) {
+      setMobileSrc(sources[0]);
+      setDesktopSrc(sources[0]);
+      return;
+    }
+
+    let cancelled = false;
+
+    Promise.all(
+      sources.map((src) => probeImageSize(src).then((size) => ({ src, size }))),
+    ).then((results) => {
+      if (cancelled) return;
+      const measured = results.filter(
+        (r): r is { src: string; size: { width: number; height: number } } =>
+          r.size !== null,
+      );
+      if (!measured.length) return;
+
+      const byRatio = measured
+        .map((r) => ({ src: r.src, ratio: r.size.width / r.size.height }))
+        .sort((a, b) => a.ratio - b.ratio);
+
+      setMobileSrc(byRatio[0]!.src);
+      setDesktopSrc(byRatio[byRatio.length - 1]!.src);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sources]);
+
+  return { mobileSrc, desktopSrc };
+}
+
+// Tracks Tailwind's `md` breakpoint (768px) so BannerImage can mount only
+// one next/image at a time instead of rendering both crops and hiding one
+// with CSS, which would still download both. Starts `false` (mobile) to
+// match server-rendered markup and avoid a hydration mismatch, then
+// corrects itself immediately after mount.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 768px)");
+    setIsDesktop(query.matches);
+    const onChange = (event: MediaQueryListEvent) =>
+      setIsDesktop(event.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+}
+
+function BannerImage({
+  image,
+  priority,
+}: {
+  image: BannerCarouselImage;
+  priority: boolean;
+}) {
+  const { mobileSrc, desktopSrc } = useResponsiveSource(image.sources);
+  const isDesktop = useIsDesktop();
+
+  return (
+    <div className="relative aspect-4/5 w-full overflow-hidden md:aspect-video">
+      <NextImage
+        src={isDesktop ? desktopSrc : mobileSrc}
+        alt={image.alt ?? ""}
+        fill
+        sizes="(min-width: 768px) 84vw, 100vw"
+        className="object-cover"
+        priority={priority}
+      />
+    </div>
+  );
+}
 
 export function BannerCarousel({ images }: { images: BannerCarouselImage[] }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -59,22 +168,11 @@ export function BannerCarousel({ images }: { images: BannerCarouselImage[] }) {
         <div ref={emblaRef} className="overflow-hidden">
           <ul className="flex">
             {images.map((image, i) => {
-              const slide = (
-                <div className="relative aspect-4/5 w-full overflow-hidden md:aspect-video">
-                  <Image
-                    src={image.src}
-                    alt={image.alt ?? ""}
-                    fill
-                    sizes="(min-width: 768px) 84vw, 100vw"
-                    className="object-cover"
-                    priority={i === 0}
-                  />
-                </div>
-              );
+              const slide = <BannerImage image={image} priority={i === 0} />;
 
               return (
                 <li
-                  key={`${image.src}${i}`}
+                  key={`${image.sources[0]}${i}`}
                   className="w-full flex-none md:w-[84%] md:px-2"
                 >
                   {image.href ? <Link href={image.href}>{slide}</Link> : slide}
@@ -108,7 +206,7 @@ export function BannerCarousel({ images }: { images: BannerCarouselImage[] }) {
         <div className="mt-3 flex items-center justify-center gap-2 px-8 md:hidden">
           {images.map((image, i) => (
             <button
-              key={`${image.src}${i}`}
+              key={`${image.sources[0]}${i}`}
               type="button"
               aria-label={`Go to slide ${i + 1}`}
               onClick={() => emblaApi?.scrollTo(i)}

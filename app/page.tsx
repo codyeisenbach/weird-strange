@@ -1,4 +1,7 @@
-import { BannerCarousel } from "components/banner-carousel";
+import {
+  BannerCarousel,
+  BannerCarouselImage,
+} from "components/banner-carousel";
 import { Carousel } from "components/carousel";
 import Grid, { ProductCards } from "components/grid";
 import { ThreeItemGrid } from "components/grid/three-items";
@@ -14,18 +17,31 @@ export const metadata = {
   },
 };
 
-// TODO: swap for real marketing banner images once they exist.
-const PLACEHOLDER_BANNER_IMAGES = [
+// TODO: swap for real marketing banner images once they exist. Each slide
+// lists the same placeholder twice as a stand-in for a mobile/desktop crop
+// pair — BannerCarousel measures whichever sources it's given and picks the
+// most portrait one for mobile, most landscape for desktop, so this becomes
+// a real per-breakpoint image swap the moment distinct assets replace these.
+const PLACEHOLDER_BANNER_IMAGES: BannerCarouselImage[] = [
   {
-    src: "https://images.weirdstrange.com/banners/home-banner.png",
+    sources: [
+      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://images.weirdstrange.com/banners/home-banner.png",
+    ],
     alt: "Placeholder banner 1",
   },
   {
-    src: "https://images.weirdstrange.com/banners/home-banner.png",
+    sources: [
+      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://images.weirdstrange.com/banners/home-banner.png",
+    ],
     alt: "Placeholder banner 2",
   },
   {
-    src: "https://images.weirdstrange.com/banners/home-banner.png",
+    sources: [
+      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://images.weirdstrange.com/banners/home-banner.png",
+    ],
     alt: "Placeholder banner 3",
   },
 ];
