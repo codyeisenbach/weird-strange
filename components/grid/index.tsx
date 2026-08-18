@@ -10,6 +10,15 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 
+// Browsers treat every hyphen as a valid line-break point, so a title like
+// "Astounding Science Fiction 9-1947" can wrap right after the "9-" even
+// with normal word wrapping. Swapping in the non-breaking hyphen (U+2011)
+// keeps hyphenated segments glued together while leaving ordinary spaces
+// free to wrap as usual.
+function withNonBreakingHyphens(text: string) {
+  return text.replace(/-/g, "‑");
+}
+
 function Grid(props: React.ComponentProps<"ul">) {
   return (
     <ul
@@ -61,7 +70,7 @@ function ProductCards({
         </div>
         <div className="mt-2 flex w-full gap-4 justify-between px-2">
           <h3 className="min-w-0 shrink text-sm font-medium break-normal text-ws-charcoal">
-            {product.title}
+            {withNonBreakingHyphens(product.title)}
           </h3>
           <Price
             amount={product.priceRange.maxVariantPrice.amount}
