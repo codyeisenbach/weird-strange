@@ -45,13 +45,14 @@ export function WikiInfobox({
         {title}
       </div>
       {src ? (
-        <div className="relative aspect-square w-full border-b border-neutral-300 dark:border-neutral-700">
+        <div className="w-full border-b border-neutral-300 dark:border-neutral-700">
           <Image
             src={src}
             alt={alt}
-            fill
+            width={288}
+            height={288}
             sizes="288px"
-            className="object-cover"
+            className="h-auto w-full"
           />
         </div>
       ) : null}
