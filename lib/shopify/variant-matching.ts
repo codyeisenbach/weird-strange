@@ -201,6 +201,43 @@ function matchesParsedColor(parsedColor: string, color: string) {
   return parsedColor.toLowerCase() === color.toLowerCase();
 }
 
+// All thumbnails for a given color, for the mobile product-card carousel:
+// the card image first, the hover image second (if any — surfacing it as a
+// swipe target on touch devices, since there's no hover there), then the
+// rest of that color's gallery images (alt-text filtered, same convention
+// as the PDP gallery in app/product/[handle]/page.tsx) in their original
+// order, deduped by id/url.
+export function getColorImages(
+  product: Pick<Product, "options" | "variants" | "images" | "featuredImage">,
+  color: string | undefined,
+): Image[] {
+  const cardImage = getColorImage(product, color) ?? product.featuredImage;
+  const hoverImage = getHoverImage(product, color);
+
+  const colorOption = getColorOption(product.options);
+  const filteredImages = color
+    ? product.images.filter(
+        (image) =>
+          !isColorTagged(image.altText, colorOption) ||
+          matchesColor(image.altText, color),
+      )
+    : product.images;
+
+  const seen = new Set<string>();
+  const key = (image: Image) => image.id ?? image.url;
+  const ordered = [cardImage, hoverImage, ...filteredImages].filter(
+    (image): image is Image => {
+      if (!image) return false;
+      const k = key(image);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    },
+  );
+
+  return ordered;
+}
+
 // Finds the image tagged with the "hover" role (see filename convention
 // above) for the given color. Returns undefined — no swap, rather than
 // risking another color's photo — when the product has a color option but

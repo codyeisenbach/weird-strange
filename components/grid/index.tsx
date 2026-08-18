@@ -1,8 +1,10 @@
 import clsx from "clsx";
+import { ProductCardThumbnails } from "components/grid/product-card-thumbnails";
 import Price from "components/price";
 import { Product } from "lib/shopify/types";
 import {
   getColorImage,
+  getColorImages,
   getDefaultColor,
   getHoverImage,
   getVariantSearchParams,
@@ -44,17 +46,21 @@ function ProductCards({
     : `/product/${product.handle}`;
   const cardImage = getColorImage(product, color) ?? product.featuredImage;
   const hoverImage = getHoverImage(product, color);
+  const carouselImages = getColorImages(product, color);
 
   return (
     <li {...props} className={clsx("transition-opacity", className)}>
       <Link href={href} prefetch={true} className="block">
-        <div className="group relative aspect-[300/368] w-full overflow-hidden">
+        <div className="md:hidden">
+          <ProductCardThumbnails images={carouselImages} alt={product.title} />
+        </div>
+        <div className="group relative hidden aspect-[300/368] w-full overflow-hidden md:block">
           {cardImage?.url ? (
             <Image
               src={cardImage.url}
               alt={cardImage.altText || product.title}
               fill
-              sizes="(min-width: 768px) 25vw, 300px"
+              sizes="25vw"
               className="object-cover"
             />
           ) : null}
@@ -63,7 +69,7 @@ function ProductCards({
               src={hoverImage.url}
               alt={hoverImage.altText || product.title}
               fill
-              sizes="(min-width: 768px) 25vw, 300px"
+              sizes="25vw"
               className="object-cover opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-hover:duration-300"
             />
           ) : null}
