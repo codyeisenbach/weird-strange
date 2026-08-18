@@ -60,7 +60,7 @@ function ProductCards({
           ) : null}
         </div>
         <div className="mt-2 flex w-full gap-4 justify-between px-2">
-          <h3 className="text-sm font-medium text-ws-charcoal">
+          <h3 className="min-w-0 shrink text-sm font-medium break-normal text-ws-charcoal">
             {product.title}
           </h3>
           <Price
