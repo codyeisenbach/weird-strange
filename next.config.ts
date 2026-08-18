@@ -59,6 +59,14 @@ export default {
         protocol: "https",
         hostname: "media.weirdstrange.com",
       },
+      // TEMPORARY: picsum.photos is only here to supply a real portrait
+      // placeholder for the banner carousel's mobile-image demo (see
+      // PLACEHOLDER_BANNER_IMAGES in app/page.tsx). Remove this entry once
+      // real mobile banner crops replace the picsum URLs there.
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
     ],
   },
 };

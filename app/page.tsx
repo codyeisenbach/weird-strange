@@ -17,30 +17,32 @@ export const metadata = {
   },
 };
 
-// TODO: swap for real marketing banner images once they exist. Each slide
-// lists the same placeholder twice as a stand-in for a mobile/desktop crop
-// pair — BannerCarousel measures whichever sources it's given and picks the
-// most portrait one for mobile, most landscape for desktop, so this becomes
-// a real per-breakpoint image swap the moment distinct assets replace these.
+// TODO: swap for real marketing banner images once they exist. The second
+// source in each pair is a real portrait photo from picsum.photos (see the
+// TEMPORARY remotePattern in next.config.ts) standing in for a genuine
+// mobile crop, so the aspect-ratio picker in BannerCarousel has something
+// actually portrait to choose on mobile instead of the same landscape image
+// twice. Replace both URLs in each pair with real desktop/mobile crops when
+// they exist, then remove the picsum.photos remotePattern.
 const PLACEHOLDER_BANNER_IMAGES: BannerCarouselImage[] = [
   {
     sources: [
       "https://images.weirdstrange.com/banners/home-banner.png",
-      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://picsum.photos/seed/ws-banner-1/900/1600",
     ],
     alt: "Placeholder banner 1",
   },
   {
     sources: [
       "https://images.weirdstrange.com/banners/home-banner.png",
-      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://picsum.photos/seed/ws-banner-2/900/1600",
     ],
     alt: "Placeholder banner 2",
   },
   {
     sources: [
       "https://images.weirdstrange.com/banners/home-banner.png",
-      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://picsum.photos/seed/ws-banner-3/900/1600",
     ],
     alt: "Placeholder banner 3",
   },
