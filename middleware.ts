@@ -8,15 +8,21 @@ const GATED_HOSTS = [
   "weird-strange.vercel.app",
 ];
 
+// /admin/login and the auth callback (which establishes the session in the
+// first place) are exempt from the admin auth gate below, since gating them
+// would create a chicken-and-egg redirect loop. They must also be exempt
+// from the coming-soon gate further down — otherwise a signed-out visit to
+// /admin redirects here, and this page itself gets rewritten to
+// /coming-soon before anyone can ever sign in.
+const ADMIN_GATE_EXEMPT = ["/admin/login", "/admin/auth/callback"];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // /admin gets its own gate: refresh the Supabase session and require a
   // signed-in, allowlisted user. This runs even during the coming-soon
   // gate, and is layered on top of the requireAdmin() check every /admin
-  // layout/page also performs server-side. /admin/login and the auth
-  // callback (which establishes the session in the first place) are exempt.
-  const ADMIN_GATE_EXEMPT = ["/admin/login", "/admin/auth/callback"];
+  // layout/page also performs server-side.
   if (pathname.startsWith("/admin") && !ADMIN_GATE_EXEMPT.includes(pathname)) {
     const { response, user } = await updateSupabaseSession(request);
 
@@ -36,7 +42,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (request.nextUrl.pathname === "/coming-soon") {
+  if (
+    request.nextUrl.pathname === "/coming-soon" ||
+    ADMIN_GATE_EXEMPT.includes(pathname)
+  ) {
     return NextResponse.next();
   }
 
