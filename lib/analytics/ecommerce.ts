@@ -1,5 +1,5 @@
 import { sendGTMEvent } from "@next/third-parties/google";
-import { hasDoNotSellOptOut } from "lib/analytics/cookies";
+import { getCookie, hasDoNotSellOptOut } from "lib/analytics/cookies";
 import type {
   Cart,
   CartItem,
@@ -14,8 +14,19 @@ function pushEcommerceEvent(event: string, ecommerce: Record<string, unknown>) {
   // dataLayer event so GTM's server container can dedupe the two into one
   // counted event per platform (see CLAUDE.md's analytics section).
   const eventId = crypto.randomUUID();
+  // fbc/fbp are picked up by the server-side Meta CAPI tag's "Automap User
+  // Data" — it reads matching keys off the forwarded event payload, it does
+  // not need a manually configured field (see CLAUDE.md's analytics section).
+  const fbc = getCookie("_fbc");
+  const fbp = getCookie("_fbp");
   sendGTMEvent({ ecommerce: null });
-  sendGTMEvent({ event, event_id: eventId, ecommerce });
+  sendGTMEvent({
+    event,
+    event_id: eventId,
+    ...(fbc ? { fbc } : {}),
+    ...(fbp ? { fbp } : {}),
+    ecommerce,
+  });
 }
 
 export function trackViewItem(product: Product, variant?: ProductVariant) {
