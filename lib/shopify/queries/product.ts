@@ -34,18 +34,3 @@ export const getProductRecommendationsQuery = /* GraphQL */ `
   }
   ${productFragment}
 `;
-
-export const getProductHandleByIdQuery = /* GraphQL */ `
-  query getProductHandleById($id: ID!) {
-    node(id: $id) {
-      ... on Product {
-        handle
-      }
-      ... on ProductVariant {
-        product {
-          handle
-        }
-      }
-    }
-  }
-`;
