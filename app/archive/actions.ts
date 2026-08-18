@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "lib/admin/auth";
 import {
+  bulkCreateArtworksForPublications,
   createArtist,
   createArtwork,
   createPublication,
@@ -213,4 +214,17 @@ export async function unlinkArtworkProductAction(
 ): Promise<{ error?: string }> {
   await requireAdmin();
   return unlinkArtworkProduct(artworkId, shopifyProductHandle);
+}
+
+export async function bulkLinkArtistPublicationsAction(
+  artistId: string,
+  artistName: string,
+  publicationIds: string[],
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  return bulkCreateArtworksForPublications(
+    artistId,
+    artistName,
+    publicationIds,
+  );
 }

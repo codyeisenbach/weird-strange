@@ -777,6 +777,78 @@ export async function createArtwork(
   return { slug: row.slug };
 }
 
+// An artist's `publications` list (ArtistDetail.publications) is derived
+// from their linked artworks, not a manually-maintained relationship — see
+// dedupeByEarliestArtwork() above and CLAUDE.md's Archive section for why a
+// direct artist<->publication join table was dropped in favor of this. This
+// function is a bulk-creation shortcut for the multi-select on the artist
+// page, not a new relationship type: it creates one placeholder artwork row
+// per selected publication (artist + publication linked, everything else
+// null) so the existing derivation picks them up, exactly as if each had
+// been created one at a time via createArtwork(). Titles are
+// auto-generated ("<Artist> in <Publication>") since artworks.title is
+// required and there's no real title yet — the admin fills in the actual
+// title/image/description later from the artwork's own edit page.
+export async function bulkCreateArtworksForPublications(
+  artistId: string,
+  artistName: string,
+  publicationIds: string[],
+): Promise<{ error?: string }> {
+  await requireAdmin();
+
+  if (publicationIds.length === 0) return {};
+
+  const allPublications = await getPublications();
+  const publicationsById = new Map(allPublications.map((p) => [p.id, p]));
+
+  const failedTitles: string[] = [];
+
+  for (const publicationId of publicationIds) {
+    const publication = publicationsById.get(publicationId);
+    if (!publication) {
+      failedTitles.push(publicationId);
+      continue;
+    }
+
+    const title = `${artistName} in ${publication.title}`;
+    const baseSlug = slugify(title);
+    if (!baseSlug) {
+      failedTitles.push(publication.title);
+      continue;
+    }
+
+    const { error } = await insertWithUniqueSlug<{ slug: string }>(
+      "artworks",
+      baseSlug,
+      (slug) => ({
+        slug,
+        title,
+        artist_id: artistId,
+        publication_id: publicationId,
+        placement: null,
+        description: null,
+      }),
+    );
+
+    if (error) failedTitles.push(publication.title);
+  }
+
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.artists);
+  updateTag(ARCHIVE_TAGS.publications);
+
+  if (failedTitles.length > 0) {
+    const allFailed = failedTitles.length === publicationIds.length;
+    return {
+      error: allFailed
+        ? `Failed to link: ${failedTitles.join(", ")}.`
+        : `Failed to link: ${failedTitles.join(", ")}. The rest were linked successfully.`,
+    };
+  }
+
+  return {};
+}
+
 const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",

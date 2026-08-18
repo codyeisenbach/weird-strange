@@ -1,4 +1,7 @@
-import { saveArtistEdit } from "app/archive/actions";
+import {
+  bulkLinkArtistPublicationsAction,
+  saveArtistEdit,
+} from "app/archive/actions";
 import { GridTileImage } from "components/grid/tile";
 import {
   ArticleBody,
@@ -8,10 +11,12 @@ import {
   WikiSection,
 } from "components/archive/wiki-article";
 import { WikiEditable } from "components/archive/wiki-editable";
+import { PublicationLinker } from "components/archive/publication-linker";
 import { JsonLd } from "components/seo/json-ld";
 import { getAdminUser } from "lib/admin/auth";
-import { getArtist } from "lib/archive";
-import type { ArtistDetail } from "lib/archive/types";
+import { getArtist, getPublications } from "lib/archive";
+import type { ArtistDetail, Publication } from "lib/archive/types";
+import type { ReactNode } from "react";
 import { siteUrl } from "lib/site-config";
 import {
   buildBreadcrumbJsonLd,
@@ -35,7 +40,13 @@ export async function generateMetadata(props: {
   };
 }
 
-function ArtistInfobox({ artist }: { artist: ArtistDetail }) {
+function ArtistInfobox({
+  artist,
+  publicationLinker,
+}: {
+  artist: ArtistDetail;
+  publicationLinker?: ReactNode;
+}) {
   return (
     <WikiInfobox
       title={artist.name}
@@ -61,22 +72,26 @@ function ArtistInfobox({ artist }: { artist: ArtistDetail }) {
         },
         {
           label: "Publications",
-          value:
-            artist.publications.length > 0 ? (
-              <ul>
-                {artist.publications.map((publication) => (
-                  <li key={publication.id}>
-                    <WikiLink
-                      href={`/archive/publications/${publication.slug}`}
-                    >
-                      {publication.title}
-                    </WikiLink>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              "—"
-            ),
+          value: (
+            <>
+              {artist.publications.length > 0 ? (
+                <ul>
+                  {artist.publications.map((publication) => (
+                    <li key={publication.id}>
+                      <WikiLink
+                        href={`/archive/publications/${publication.slug}`}
+                      >
+                        {publication.title}
+                      </WikiLink>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                "—"
+              )}
+              {publicationLinker}
+            </>
+          ),
         },
       ]}
     />
@@ -129,6 +144,10 @@ export default async function ArtistPage(props: {
 
   if (!artist) return notFound();
 
+  // Only fetched for admins, since it's just the picker options for the
+  // publication multi-select.
+  const allPublications: Publication[] = admin ? await getPublications() : [];
+
   const artistUrl = `${siteUrl}/archive/artists/${artist.slug}`;
   const personJsonLd = buildPersonJsonLd(artist, artistUrl);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
@@ -144,7 +163,20 @@ export default async function ArtistPage(props: {
       {admin ? (
         <WikiEditable
           subtitle="From the Weird Strange Archive"
-          infobox={<ArtistInfobox artist={artist} />}
+          infobox={
+            <ArtistInfobox
+              artist={artist}
+              publicationLinker={
+                <PublicationLinker
+                  artistId={artist.id}
+                  artistName={artist.name}
+                  allPublications={allPublications}
+                  currentPublicationIds={artist.publications.map((p) => p.id)}
+                  action={bulkLinkArtistPublicationsAction}
+                />
+              }
+            />
+          }
           titleFieldName="name"
           titleLabel="Name"
           bodyFieldName="bio"
