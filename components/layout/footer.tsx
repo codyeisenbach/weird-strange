@@ -17,9 +17,9 @@ export default async function Footer() {
   const copyrightName = COMPANY_NAME || SITE_NAME || "";
 
   return (
-    <footer className="text-sm text-ws-charcoal">
+    <footer className="text-sm text-ws-charcoal mt-8">
       <div className="border-t border-neutral-200 dark:border-neutral-700">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-12 text-sm md:flex-row md:gap-12 md:px-4 min-[1320px]:px-0">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 text-sm md:flex-row md:gap-12 md:px-4 min-[1320px]:px-0">
           <div>
             <Link
               className="flex items-center gap-2 text-ws-charcoal md:pt-1"
