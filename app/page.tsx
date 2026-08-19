@@ -59,7 +59,10 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="px-8 pt-8 w-full my-4">
+      <div className="px-8 pt-6 w-full my-4">
+        <h2 className="mb-6 text-6xl font-bold text-ws-charcoal">
+          HIGH FIDELITY ARCHIVE
+        </h2>
         <BannerCarousel images={PLACEHOLDER_BANNER_IMAGES} />
       </div>
       <div className="px-8 w-full">
@@ -73,7 +76,7 @@ export default async function HomePage() {
           </li>
           {carouselProducts[0] ? (
             <ProductCards
-              product={carouselProducts[0]}
+              product={carouselProducts[7]}
               className="border border-ws-border md:col-span-1"
             />
           ) : null}
