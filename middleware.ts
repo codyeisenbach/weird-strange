@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateSupabaseSession } from "lib/supabase/middleware";
 import { isAdminEmail } from "lib/admin/allowlist";
-
-const GATED_HOSTS = [
-  "weirdstrange.com",
-  "www.weirdstrange.com",
-  "weird-strange.vercel.app",
-];
+import { COMING_SOON_GATED_HOSTS } from "lib/site-config";
 
 // /admin/login and the auth callback (which establishes the session in the
 // first place) are exempt from the admin auth gate below, since gating them
@@ -67,7 +62,7 @@ export async function middleware(request: NextRequest) {
   // archive instead — there's nothing to shop yet, but the archive is real,
   // browsable content. Admins get the normal homepage like everywhere else
   // in this gate, so they can still preview it.
-  if (pathname === "/" && GATED_HOSTS.includes(host)) {
+  if (pathname === "/" && COMING_SOON_GATED_HOSTS.includes(host)) {
     const { isAdmin, response } = await checkSignedInAdmin(request);
     if (!isAdmin) {
       return NextResponse.redirect(new URL("/archive", request.url));
@@ -82,7 +77,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  if (!GATED_HOSTS.includes(host)) {
+  if (!COMING_SOON_GATED_HOSTS.includes(host)) {
     return NextResponse.next();
   }
 

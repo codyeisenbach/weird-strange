@@ -2,7 +2,9 @@ import { UserIcon } from "@heroicons/react/24/outline";
 import CartModal from "components/cart/modal";
 import { getAdminUser } from "lib/admin/auth";
 import { getMenu } from "lib/shopify";
+import { isComingSoonGated } from "lib/site-config";
 import Image from "next/image";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
 import MobileMenu from "./mobile-menu";
@@ -20,12 +22,13 @@ export async function Navbar() {
   // stay fully visible for them too, instead of hiding a path they can
   // actually use.
   const isAdmin = Boolean(await getAdminUser());
+  const isGated = isComingSoonGated((await headers()).get("host"));
 
   return (
     <nav className="sticky top-0 z-40 flex items-center w-full justify-center bg-ws-cream p-2 border-b border-ws-border text-ws-charcoal">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
-          <MobileMenu menu={menu} isAdmin={isAdmin} />
+          <MobileMenu menu={menu} isAdmin={isAdmin} isGated={isGated} />
         </Suspense>
       </div>
       <div className="flex w-full items-center justify-between max-w-[1280px] px-1 md:px-8">
@@ -48,7 +51,7 @@ export async function Navbar() {
           </Link>
         </div>
         <div className="flex w-fit items-center justify-center">
-          <NavMenu menu={menu} isAdmin={isAdmin} />
+          <NavMenu menu={menu} isAdmin={isAdmin} isGated={isGated} />
         </div>
         <div className="ml-auto flex items-center justify-end md:ml-0 md:w-fit">
           <div className="hidden justify-center md:flex">
@@ -64,7 +67,7 @@ export async function Navbar() {
           >
             <UserIcon className="h-5 w-5 transition-transform ease-in-out active:scale-125" />
           </Link>
-          <CartModal isAdmin={isAdmin} />
+          <CartModal isAdmin={isAdmin} isGated={isGated} />
         </div>
       </div>
     </nav>

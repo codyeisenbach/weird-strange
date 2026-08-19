@@ -12,7 +12,6 @@ import type { Cart } from "lib/shopify/types";
 import { createUrl } from "lib/utils";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { createCartAndSetCookie, updateCartAttributesAction } from "./actions";
 import { useCart } from "./cart-context";
@@ -24,8 +23,13 @@ type MerchandiseSearchParams = {
   [key: string]: string;
 };
 
-export default function CartModal({ isAdmin = false }: { isAdmin?: boolean }) {
-  const pathname = usePathname();
+export default function CartModal({
+  isAdmin = false,
+  isGated = false,
+}: {
+  isAdmin?: boolean;
+  isGated?: boolean;
+}) {
   const { cart, updateCartItem } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const quantityRef = useRef(cart?.totalQuantity);
@@ -51,12 +55,12 @@ export default function CartModal({ isAdmin = false }: { isAdmin?: boolean }) {
     }
   }, [isOpen, cart?.totalQuantity, quantityRef]);
 
-  // The store is coming-soon gated on product/collection pages, so the cart
-  // has nothing to add to yet — hide the icon on the homepage rather than
-  // let it open onto an empty, non-functional cart. Signed-in admins can
-  // already bypass that gate and shop for real (middleware.ts), so keep the
-  // cart visible for them.
-  if (pathname === "/" && !isAdmin) return null;
+  // While the store is coming-soon gated, non-admins can't reach /product or
+  // /collections at all (middleware.ts) — the cart has nothing to add to and
+  // no way to check out, so hide the icon everywhere rather than let it open
+  // onto a dead end. Signed-in admins bypass that gate and shop for real, so
+  // keep the cart visible for them.
+  if (isGated && !isAdmin) return null;
 
   return (
     <>

@@ -23,8 +23,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // — same reasoning as the product/collections exclusion above, don't list a
   // URL that doesn't resolve to 200.
   const staticRoutes = isComingSoon
-    ? ["/archive", "/archive/artists", "/archive/publications", "/archive/artworks"]
-    : ["", "/archive", "/archive/artists", "/archive/publications", "/archive/artworks"];
+    ? [
+        "/archive",
+        "/archive/artists",
+        "/archive/publications",
+        "/archive/artworks",
+      ]
+    : [
+        "",
+        "/archive",
+        "/archive/artists",
+        "/archive/publications",
+        "/archive/artworks",
+      ];
 
   const routesMap = staticRoutes.map((route) => ({
     url: `${baseUrl}${route}`,

@@ -12,9 +12,11 @@ import Search, { SearchSkeleton } from "./search";
 export default function MobileMenu({
   menu,
   isAdmin,
+  isGated,
 }: {
   menu: Menu[];
   isAdmin: boolean;
+  isGated: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,13 +38,13 @@ export default function MobileMenu({
     setIsOpen(false);
   }, [pathname, searchParams]);
 
-  // On the homepage, hide any menu item that links into /collections — the
-  // store is coming-soon gated there, so linking to it would dead-end. Signed-in
-  // admins can already reach /collections directly (they bypass the gate in
-  // middleware.ts), so don't hide the link for them.
+  // While the coming-soon gate is active, only the Archive link makes sense
+  // in the nav — everything else points at storefront surfaces that redirect
+  // away (middleware.ts). Signed-in admins bypass the gate itself, so they
+  // still see the full menu.
   const items =
-    pathname === "/" && !isAdmin
-      ? menu.filter((item) => !item.path.startsWith("/collections"))
+    isGated && !isAdmin
+      ? menu.filter((item) => item.path.startsWith("/archive"))
       : menu;
 
   return (
