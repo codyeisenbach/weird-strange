@@ -1,3 +1,4 @@
+import { getArtists, getArtworks, getPublications } from "lib/archive";
 import { getCollections, getPages, getProducts } from "lib/shopify";
 import { baseUrl, validateEnvironmentVariables } from "lib/utils";
 import { MetadataRoute } from "next";
@@ -12,10 +13,12 @@ export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   validateEnvironmentVariables();
 
-  const routesMap = [""].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date().toISOString(),
-  }));
+  const routesMap = ["", "/archive/artists", "/archive/publications", "/archive/artworks"].map(
+    (route) => ({
+      url: `${baseUrl}${route}`,
+      lastModified: new Date().toISOString(),
+    }),
+  );
 
   const collectionsPromise = getCollections().then((collections) =>
     collections.map((collection) => ({
@@ -24,6 +27,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   );
 
+  // The Storefront API only ever returns active/published products for a
+  // public storefront token — draft and archived products aren't queryable
+  // through it, so no extra status filter is needed or possible here.
   const productsPromise = getProducts({}).then((products) =>
     products.map((product) => ({
       url: `${baseUrl}/product/${product.handle}`,
@@ -38,11 +44,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   );
 
+  // None of the archive tables have a draft/status column (see CLAUDE.md) —
+  // every row is public by construction, so all rows returned here belong
+  // in the sitemap with no additional filtering.
+  const artistsPromise = getArtists().then((artists) =>
+    artists.map((artist) => ({
+      url: `${baseUrl}/archive/artists/${artist.slug}`,
+      lastModified: artist.createdAt,
+    })),
+  );
+
+  const publicationsPromise = getPublications().then((publications) =>
+    publications.map((publication) => ({
+      url: `${baseUrl}/archive/publications/${publication.slug}`,
+      lastModified: publication.createdAt,
+    })),
+  );
+
+  const artworksPromise = getArtworks().then((artworks) =>
+    artworks.map((artwork) => ({
+      url: `${baseUrl}/archive/artworks/${artwork.slug}`,
+      lastModified: artwork.createdAt,
+    })),
+  );
+
   let fetchedRoutes: Route[] = [];
 
   try {
     fetchedRoutes = (
-      await Promise.all([collectionsPromise, productsPromise, pagesPromise])
+      await Promise.all([
+        collectionsPromise,
+        productsPromise,
+        pagesPromise,
+        artistsPromise,
+        publicationsPromise,
+        artworksPromise,
+      ])
     ).flat();
   } catch (error) {
     throw JSON.stringify(error, null, 2);

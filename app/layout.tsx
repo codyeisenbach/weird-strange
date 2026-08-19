@@ -50,7 +50,7 @@ export default async function RootLayout({
         <CartProvider cartPromise={cart}>
           <SaleBanner />
           <Navbar />
-          <main className="pt-4 flex flex-col max-w-[1280px] justify-center self-center w-full">
+          <main className="pt-2 sm:pt-4 flex flex-col max-w-[1280px] justify-center self-center w-full">
             {children}
             <Toaster closeButton />
           </main>
