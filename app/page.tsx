@@ -3,9 +3,8 @@ import {
   BannerCarouselImage,
 } from "components/banner-carousel";
 import { Carousel } from "components/carousel";
-import Grid, { ProductCards } from "components/grid";
 import { ThreeItemGrid } from "components/grid/three-items";
-import { ImageBanner } from "components/image-banner";
+import { ProductBanner } from "components/product-banner";
 import { ProductCarousel } from "components/product-carousel";
 import { getCollectionProducts, getProducts } from "lib/shopify";
 
@@ -66,22 +65,10 @@ export default async function HomePage() {
         <BannerCarousel images={PLACEHOLDER_BANNER_IMAGES} />
       </div>
       <div className="px-8 w-full">
-        <Grid className="items-stretch md:grid-cols-4">
-          <li className="min-w-0 md:col-span-3">
-            <ImageBanner
-              src="https://images.weirdstrange.com/banners/home-banner.png"
-              href="/search"
-              alt="Shop the collection"
-            />
-          </li>
-          {carouselProducts[0] ? (
-            <ProductCards
-              product={carouselProducts[7]}
-              className="border border-ws-border md:col-span-1"
-            />
-          ) : null}
-        </Grid>
         <ProductCarousel products={carouselProducts} />
+        <ProductBanner
+          product={carouselProducts[0] ? carouselProducts[0] : undefined}
+        />
       </div>
       <ThreeItemGrid />
       <Carousel />

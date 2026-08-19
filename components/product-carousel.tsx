@@ -4,34 +4,14 @@ import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import { ProductCards } from "components/grid";
 import useEmblaCarousel from "embla-carousel-react";
 import { Product } from "lib/shopify/types";
-import { useCallback, useEffect, useState } from "react";
 
 export function ProductCarousel({ products }: { products: Product[] }) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start" });
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setCanScrollPrev(emblaApi.canScrollPrev());
-    setCanScrollNext(emblaApi.canScrollNext());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
-    return () => {
-      emblaApi.off("select", onSelect);
-      emblaApi.off("reInit", onSelect);
-    };
-  }, [emblaApi, onSelect]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: true });
 
   if (!products.length) return null;
 
   const buttonClasses =
-    "flex h-11 w-11 items-center justify-center border border-ws-border text-ws-charcoal transition-opacity disabled:opacity-30";
+    "flex items-center justify-center p-1 text-ws-charcoal transition-transform ease-in-out active:scale-125 cursor-pointer lg:p-2 rounded-full bg-ws-cream/80 backdrop-blur-sm";
 
   return (
     <div className="relative w-full my-4">
@@ -46,26 +26,26 @@ export function ProductCarousel({ products }: { products: Product[] }) {
           ))}
         </ul>
       </div>
-      <div className="mt-4 flex gap-2">
-        <button
-          type="button"
-          aria-label="Previous products"
-          onClick={() => emblaApi?.scrollPrev()}
-          disabled={!canScrollPrev}
-          className={buttonClasses}
-        >
-          <ArrowLeftIcon className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          aria-label="Next products"
-          onClick={() => emblaApi?.scrollNext()}
-          disabled={!canScrollNext}
-          className={buttonClasses}
-        >
-          <ArrowRightIcon className="h-5 w-5" />
-        </button>
-      </div>
+      {products.length > 1 ? (
+        <>
+          <button
+            type="button"
+            aria-label="Previous products"
+            onClick={() => emblaApi?.scrollPrev()}
+            className={`absolute left-2 top-1/2 z-10 -translate-y-1/2 ${buttonClasses}`}
+          >
+            <ArrowLeftIcon className="h-7 w-7" strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next products"
+            onClick={() => emblaApi?.scrollNext()}
+            className={`absolute right-2 top-1/2 z-10 -translate-y-1/2 ${buttonClasses}`}
+          >
+            <ArrowRightIcon className="h-7 w-7" strokeWidth={2} />
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }
