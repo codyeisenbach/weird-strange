@@ -66,6 +66,7 @@ export default async function HomePage() {
       </div>
       <div className="px-8 w-full">
         <ProductCarouselByCategory title="Pulp Sci-Fi" category="pulp-sci-fi" />
+        <ProductCarouselByCategory title="All" category="all" />
         <ProductBanner
           product={carouselProducts[0] ? carouselProducts[0] : undefined}
         />
