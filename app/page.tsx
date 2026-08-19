@@ -58,7 +58,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <div className="px-8 pt-6 w-full my-4">
+      <div className="px-8 pt-2 sm:pt-6 w-full my-4">
         <h2 className="mb-6 text-6xl font-bold text-ws-charcoal">
           HIGH FIDELITY ARCHIVE
         </h2>
