@@ -10,11 +10,35 @@ const GATED_HOSTS = [
 
 // /admin/login and the auth callback (which establishes the session in the
 // first place) are exempt from the admin auth gate below, since gating them
-// would create a chicken-and-egg redirect loop. They must also be exempt
-// from the coming-soon gate further down — otherwise a signed-out visit to
-// /admin redirects here, and this page itself gets rewritten to
-// /coming-soon before anyone can ever sign in.
+// would create a chicken-and-egg redirect loop.
 const ADMIN_GATE_EXEMPT = ["/admin/login", "/admin/auth/callback"];
+
+// The coming-soon gate only blocks storefront shopping surfaces (product and
+// collection pages) — the homepage, /archive, /privacy-choices, etc. stay
+// browsable while the store itself is gated.
+const COMING_SOON_GATED_PREFIXES = ["/product", "/collections"];
+
+// Checks whether the request carries a signed-in, allowlisted admin session,
+// refreshing the Supabase session cookies along the way (per Supabase's SSR
+// guidance) so the caller can return `response` on the bypass path instead of
+// a plain NextResponse.next(). Only bothers verifying the session (a network
+// round-trip to Supabase) if a Supabase auth cookie is actually present —
+// anonymous visitors, who are the vast majority of traffic on a
+// coming-soon-gated site, have none, so this keeps their request cheap.
+async function checkSignedInAdmin(
+  request: NextRequest,
+): Promise<{ isAdmin: boolean; response: NextResponse }> {
+  const hasSupabaseCookie = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-"));
+
+  if (!hasSupabaseCookie) {
+    return { isAdmin: false, response: NextResponse.next() };
+  }
+
+  const { response, user } = await updateSupabaseSession(request);
+  return { isAdmin: isAdminEmail(user?.email), response };
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -38,36 +62,46 @@ export async function middleware(request: NextRequest) {
   }
 
   const host = request.headers.get("host")?.toLowerCase() ?? "";
+
+  // While the store is coming-soon gated, the homepage sends visitors to the
+  // archive instead — there's nothing to shop yet, but the archive is real,
+  // browsable content. Admins get the normal homepage like everywhere else
+  // in this gate, so they can still preview it.
+  if (pathname === "/" && GATED_HOSTS.includes(host)) {
+    const { isAdmin, response } = await checkSignedInAdmin(request);
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL("/archive", request.url));
+    }
+    return response;
+  }
+
+  const isGatedRoute = COMING_SOON_GATED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+  if (!isGatedRoute) {
+    return NextResponse.next();
+  }
+
   if (!GATED_HOSTS.includes(host)) {
     return NextResponse.next();
   }
 
-  if (
-    request.nextUrl.pathname === "/coming-soon" ||
-    ADMIN_GATE_EXEMPT.includes(pathname)
-  ) {
+  if (ADMIN_GATE_EXEMPT.includes(pathname)) {
     return NextResponse.next();
   }
 
   // Let anyone who has signed in through /admin (i.e. an allowlisted admin)
   // browse the real storefront too, not just /admin itself — useful for
-  // previewing the live site while it's gated from the public. Only bother
-  // verifying the session (a network round-trip to Supabase) if a Supabase
-  // auth cookie is actually present — anonymous visitors, who are the vast
-  // majority of traffic on a coming-soon-gated site, have none, so this
-  // keeps their request cheap.
-  const hasSupabaseCookie = request.cookies
-    .getAll()
-    .some((cookie) => cookie.name.startsWith("sb-"));
-
-  if (hasSupabaseCookie) {
-    const { response, user } = await updateSupabaseSession(request);
-    if (isAdminEmail(user?.email)) {
-      return response;
-    }
+  // previewing the live site while it's gated from the public.
+  const { isAdmin, response } = await checkSignedInAdmin(request);
+  if (isAdmin) {
+    return response;
   }
 
-  return NextResponse.rewrite(new URL("/coming-soon", request.url));
+  // Straight to /archive, not "/" — the homepage would just redirect here
+  // again (see above), and a two-hop redirect chain from a crawled URL wastes
+  // crawl budget and can cause Google to deprioritize the URL.
+  return NextResponse.redirect(new URL("/archive", request.url));
 }
 
 export const config = {

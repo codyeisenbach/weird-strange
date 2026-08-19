@@ -1,11 +1,12 @@
 import { UserIcon } from "@heroicons/react/24/outline";
 import CartModal from "components/cart/modal";
+import { getAdminUser } from "lib/admin/auth";
 import { getMenu } from "lib/shopify";
-import { Menu } from "lib/shopify/types";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import MobileMenu from "./mobile-menu";
+import { NavMenu } from "./nav-menu";
 import Search, { SearchSkeleton } from "./search";
 
 const logoUrl =
@@ -14,12 +15,17 @@ const logoUrl =
 
 export async function Navbar() {
   const menu = await getMenu("main-menu");
+  // Signed-in admins can already bypass the coming-soon gate on /product and
+  // /collections directly (middleware.ts), so the homepage nav/cart should
+  // stay fully visible for them too, instead of hiding a path they can
+  // actually use.
+  const isAdmin = Boolean(await getAdminUser());
 
   return (
     <nav className="sticky top-0 z-40 flex items-center w-full justify-center bg-ws-cream p-2 border-b border-ws-border text-ws-charcoal">
       <div className="block flex-none md:hidden">
         <Suspense fallback={null}>
-          <MobileMenu menu={menu} />
+          <MobileMenu menu={menu} isAdmin={isAdmin} />
         </Suspense>
       </div>
       <div className="flex w-full items-center justify-between max-w-[1280px] px-1 md:px-8">
@@ -42,21 +48,7 @@ export async function Navbar() {
           </Link>
         </div>
         <div className="flex w-fit items-center justify-center">
-          {menu.length ? (
-            <ul className="hidden gap-6 text-sm md:flex md:items-center">
-              {menu.map((item: Menu) => (
-                <li key={item.title}>
-                  <Link
-                    href={item.path}
-                    prefetch={true}
-                    className="text-ws-charcoal underline-offset-4 hover:underline"
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <NavMenu menu={menu} isAdmin={isAdmin} />
         </div>
         <div className="ml-auto flex items-center justify-end md:ml-0 md:w-fit">
           <div className="hidden justify-center md:flex">
@@ -72,7 +64,7 @@ export async function Navbar() {
           >
             <UserIcon className="h-5 w-5 transition-transform ease-in-out active:scale-125" />
           </Link>
-          <CartModal />
+          <CartModal isAdmin={isAdmin} />
         </div>
       </div>
     </nav>

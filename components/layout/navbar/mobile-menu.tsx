@@ -9,7 +9,13 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Menu } from "lib/shopify/types";
 import Search, { SearchSkeleton } from "./search";
 
-export default function MobileMenu({ menu }: { menu: Menu[] }) {
+export default function MobileMenu({
+  menu,
+  isAdmin,
+}: {
+  menu: Menu[];
+  isAdmin: boolean;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +35,15 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
   useEffect(() => {
     setIsOpen(false);
   }, [pathname, searchParams]);
+
+  // On the homepage, hide any menu item that links into /collections — the
+  // store is coming-soon gated there, so linking to it would dead-end. Signed-in
+  // admins can already reach /collections directly (they bypass the gate in
+  // middleware.ts), so don't hide the link for them.
+  const items =
+    pathname === "/" && !isAdmin
+      ? menu.filter((item) => !item.path.startsWith("/collections"))
+      : menu;
 
   return (
     <>
@@ -76,9 +91,9 @@ export default function MobileMenu({ menu }: { menu: Menu[] }) {
                     <Search />
                   </Suspense>
                 </div>
-                {menu.length ? (
+                {items.length ? (
                   <ul className="flex w-full flex-col">
-                    {menu.map((item: Menu) => (
+                    {items.map((item: Menu) => (
                       <li
                         className="py-2 text-xl text-ws-charcoal transition-colors hover:text-ws-charcoal/60"
                         key={item.title}

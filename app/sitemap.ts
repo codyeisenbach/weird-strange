@@ -10,32 +10,47 @@ type Route = {
 
 export const dynamic = "force-dynamic";
 
+// While COMING_SOON is true, /product and /collections redirect to /archive
+// (see middleware.ts) — a sitemap listing URLs that don't resolve to 200 is
+// against Google's guidance and wastes crawl budget, so leave those two
+// route families out of the sitemap entirely for the duration of the gate.
+const isComingSoon = process.env.COMING_SOON === "true";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   validateEnvironmentVariables();
 
-  const routesMap = ["", "/archive/artists", "/archive/publications", "/archive/artworks"].map(
-    (route) => ({
-      url: `${baseUrl}${route}`,
-      lastModified: new Date().toISOString(),
-    }),
-  );
+  // The homepage itself redirects to /archive during the gate (middleware.ts)
+  // — same reasoning as the product/collections exclusion above, don't list a
+  // URL that doesn't resolve to 200.
+  const staticRoutes = isComingSoon
+    ? ["/archive", "/archive/artists", "/archive/publications", "/archive/artworks"]
+    : ["", "/archive", "/archive/artists", "/archive/publications", "/archive/artworks"];
 
-  const collectionsPromise = getCollections().then((collections) =>
-    collections.map((collection) => ({
-      url: `${baseUrl}${collection.path}`,
-      lastModified: collection.updatedAt,
-    })),
-  );
+  const routesMap = staticRoutes.map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date().toISOString(),
+  }));
+
+  const collectionsPromise = isComingSoon
+    ? Promise.resolve([])
+    : getCollections().then((collections) =>
+        collections.map((collection) => ({
+          url: `${baseUrl}${collection.path}`,
+          lastModified: collection.updatedAt,
+        })),
+      );
 
   // The Storefront API only ever returns active/published products for a
   // public storefront token — draft and archived products aren't queryable
   // through it, so no extra status filter is needed or possible here.
-  const productsPromise = getProducts({}).then((products) =>
-    products.map((product) => ({
-      url: `${baseUrl}/product/${product.handle}`,
-      lastModified: product.updatedAt,
-    })),
-  );
+  const productsPromise = isComingSoon
+    ? Promise.resolve([])
+    : getProducts({}).then((products) =>
+        products.map((product) => ({
+          url: `${baseUrl}/product/${product.handle}`,
+          lastModified: product.updatedAt,
+        })),
+      );
 
   const pagesPromise = getPages().then((pages) =>
     pages.map((page) => ({
