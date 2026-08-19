@@ -35,9 +35,15 @@ function Grid(props: React.ComponentProps<"ul">) {
 function ProductCards({
   product,
   className,
+  disableThumbnailCarousel,
   ...props
 }: {
   product: Product;
+  // Skip the swipeable mobile thumbnail carousel and show a single static
+  // image instead — needed when this card is itself rendered inside another
+  // swipeable carousel, since a nested Embla instance fights the parent's
+  // for horizontal drag/touch gestures.
+  disableThumbnailCarousel?: boolean;
 } & React.ComponentProps<"li">) {
   const color = getDefaultColor(product);
   const variantParams = getVariantSearchParams(product, color);
@@ -52,7 +58,24 @@ function ProductCards({
     <li {...props} className={clsx("transition-opacity", className)}>
       <Link href={href} prefetch={true} className="block">
         <div className="md:hidden">
-          <ProductCardThumbnails images={carouselImages} alt={product.title} />
+          {disableThumbnailCarousel ? (
+            <div className="relative aspect-[300/368] w-full overflow-hidden">
+              {cardImage?.url ? (
+                <Image
+                  src={cardImage.url}
+                  alt={cardImage.altText || product.title}
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
+                />
+              ) : null}
+            </div>
+          ) : (
+            <ProductCardThumbnails
+              images={carouselImages}
+              alt={product.title}
+            />
+          )}
         </div>
         <div className="group relative hidden aspect-[300/368] w-full overflow-hidden md:block">
           {cardImage?.url ? (

@@ -29,7 +29,8 @@ export function ProductCarouselView({
               <ProductCards
                 key={product.handle}
                 product={product}
-                className="w-[300px] flex-none"
+                className="w-full flex-none sm:w-[300px]"
+                disableThumbnailCarousel
               />
             ))}
           </ul>
