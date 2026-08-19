@@ -5,7 +5,7 @@ import {
 import { Carousel } from "components/carousel";
 import { ThreeItemGrid } from "components/grid/three-items";
 import { ProductBanner } from "components/product-banner";
-import { ProductCarousel } from "components/product-carousel";
+import { ProductCarouselByCategory } from "components/product-carousel-by-category";
 import { getCollectionProducts, getProducts } from "lib/shopify";
 
 export const metadata = {
@@ -65,7 +65,7 @@ export default async function HomePage() {
         <BannerCarousel images={PLACEHOLDER_BANNER_IMAGES} />
       </div>
       <div className="px-8 w-full">
-        <ProductCarousel products={carouselProducts} />
+        <ProductCarouselByCategory title="Pulp Sci-Fi" category="pulp-sci-fi" />
         <ProductBanner
           product={carouselProducts[0] ? carouselProducts[0] : undefined}
         />
