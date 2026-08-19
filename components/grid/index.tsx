@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { ProductCardThumbnails } from "components/grid/product-card-thumbnails";
 import Price from "components/price";
+import { withNonBreakingHyphens } from "lib/utils";
 import { Product } from "lib/shopify/types";
 import {
   getColorImage,
@@ -11,15 +12,6 @@ import {
 } from "lib/shopify/variant-matching";
 import Image from "next/image";
 import Link from "next/link";
-
-// Browsers treat every hyphen as a valid line-break point, so a title like
-// "Astounding Science Fiction 9-1947" can wrap right after the "9-" even
-// with normal word wrapping. Swapping in the non-breaking hyphen (U+2011)
-// keeps hyphenated segments glued together while leaving ordinary spaces
-// free to wrap as usual.
-function withNonBreakingHyphens(text: string) {
-  return text.replace(/-/g, "‑");
-}
 
 function Grid(props: React.ComponentProps<"ul">) {
   return (

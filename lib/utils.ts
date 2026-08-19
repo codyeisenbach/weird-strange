@@ -19,6 +19,14 @@ export const ensureStartsWith = (stringToCheck: string, startsWith: string) =>
     ? stringToCheck
     : `${startsWith}${stringToCheck}`;
 
+// Browsers treat every hyphen as a valid line-break point, so a title like
+// "Astounding Science Fiction 9-1947" can wrap right after the "9-" even
+// with normal word wrapping. Swapping in the non-breaking hyphen (U+2011)
+// keeps hyphenated segments glued together while leaving ordinary spaces
+// free to wrap as usual.
+export const withNonBreakingHyphens = (text: string) =>
+  text.replace(/-/g, "‑");
+
 export const validateEnvironmentVariables = () => {
   const requiredEnvironmentVariables = [
     "SHOPIFY_STORE_DOMAIN",

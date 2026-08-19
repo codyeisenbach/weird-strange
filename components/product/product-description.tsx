@@ -4,6 +4,7 @@ import Prose from "components/prose";
 import Link from "next/link";
 import type { ArtworkDetail } from "lib/archive/types";
 import { Product, ProductVariant } from "lib/shopify/types";
+import { withNonBreakingHyphens } from "lib/utils";
 import { VariantSelector } from "./variant-selector";
 import { ViewItemTracker } from "./view-item-tracker";
 
@@ -58,7 +59,9 @@ export function ProductHeader({ product }: { product: Product }) {
 
   return (
     <div className="mb-6 flex flex-col lg:border-b border-ws-border/20 pb-6">
-      <h1 className="mb-6 text-3xl font-medium lg:text-5xl">{product.title}</h1>
+      <h1 className="mb-6 text-3xl font-medium break-normal lg:text-5xl">
+        {withNonBreakingHyphens(product.title)}
+      </h1>
       <div className="inline-flex w-fit items-center gap-3 bg-ws-charcoal px-4 py-2">
         {hasDiscount ? (
           <Price
