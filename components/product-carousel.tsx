@@ -21,7 +21,7 @@ export function ProductCarouselView({
 
   return (
     <div className="w-full my-4">
-      <h2 className="mb-6 text-3xl font-medium text-ws-charcoal">{title}</h2>
+      <h2 className="mb-2 text-3xl font-medium text-ws-charcoal">{title}</h2>
       <div className="relative">
         <div ref={emblaRef} className="overflow-hidden">
           <ul className="flex gap-4">

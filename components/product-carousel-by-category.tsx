@@ -1,5 +1,5 @@
 import { ProductCarouselView } from "components/product-carousel";
-import { getCollectionProducts, getProducts } from "lib/shopify";
+import { getCollection, getCollectionProducts, getProducts } from "lib/shopify";
 
 // "Category" maps to a Shopify collection handle — this repo has no separate
 // category/productType/tag grouping concept (see CategoryPage in
@@ -12,12 +12,15 @@ export async function ProductCarouselByCategory({
   category: string;
 }) {
   // Prefer the curated collection; fall back to the full catalog until it exists.
-  const collectionProducts = await getCollectionProducts({
-    collection: category,
-  });
+  const [collection, collectionProducts] = await Promise.all([
+    getCollection(category),
+    getCollectionProducts({ collection: category }),
+  ]);
   const products = collectionProducts.length
     ? collectionProducts
     : await getProducts({});
 
-  return <ProductCarouselView title={title} products={products} />;
+  return (
+    <ProductCarouselView title={collection?.title ?? title} products={products} />
+  );
 }

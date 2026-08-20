@@ -65,7 +65,7 @@ export default async function HomePage() {
         <BannerCarousel images={PLACEHOLDER_BANNER_IMAGES} />
       </div>
       <div className="px-8 w-full">
-        <ProductCarouselByCategory title="Pulp Sci-Fi" category="pulp-sci-fi" />
+        <ProductCarouselByCategory title="Pulp Sci-Fi" category="pulp" />
         <ProductCarouselByCategory title="All" category="all" />
         <ProductBanner
           product={carouselProducts[0] ? carouselProducts[0] : undefined}
