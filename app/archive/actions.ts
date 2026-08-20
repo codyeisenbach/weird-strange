@@ -13,6 +13,7 @@ import {
   updateArtwork,
   updatePublication,
   uploadArtworkImage,
+  uploadPublicationImage,
 } from "lib/archive";
 import { redirect } from "next/navigation";
 
@@ -198,6 +199,31 @@ export async function uploadArtworkImageAction(
   }
 
   return uploadArtworkImage(artworkId, artworkSlug, stagingKey);
+}
+
+// Step 1 for publications — reuses getArtworkImageUploadUrl directly since
+// that helper is already entity-agnostic (only validates content-type and
+// mints a staging key under archive/_staging/), rather than duplicating an
+// identical presign function under a new name.
+export async function getPublicationImageUploadUrlAction(
+  contentType: string,
+): Promise<{ uploadUrl?: string; stagingKey?: string; error?: string }> {
+  await requireAdmin();
+  return getArtworkImageUploadUrl(contentType);
+}
+
+export async function uploadPublicationImageAction(
+  publicationId: string,
+  publicationSlug: string,
+  stagingKey: string,
+): Promise<{ imagePath?: string; error?: string }> {
+  await requireAdmin();
+
+  if (!stagingKey) {
+    return { error: "No image uploaded." };
+  }
+
+  return uploadPublicationImage(publicationId, publicationSlug, stagingKey);
 }
 
 export async function linkArtworkProductAction(

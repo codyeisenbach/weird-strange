@@ -180,8 +180,9 @@ export default async function ArtworkPage(props: {
           <ArtworkProducts artwork={artwork} />
           <WikiSection title="Image">
             <ArtworkImageUpload
-              artworkId={artwork.id}
-              artworkSlug={artwork.slug}
+              entityId={artwork.id}
+              entitySlug={artwork.slug}
+              entityLabel="Artwork"
               currentImagePath={artwork.imagePath}
               currentImageAlt={artwork.imageAlt}
               getUploadUrlAction={getArtworkImageUploadUrlAction}

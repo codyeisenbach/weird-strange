@@ -1,4 +1,9 @@
-import { savePublicationEdit } from "app/archive/actions";
+import {
+  getPublicationImageUploadUrlAction,
+  savePublicationEdit,
+  uploadPublicationImageAction,
+} from "app/archive/actions";
+import { ArtworkImageUpload } from "components/archive/artwork-image-upload";
 import { GridTileImage } from "components/grid/tile";
 import {
   ArticleBody,
@@ -180,6 +185,17 @@ export default async function PublicationPage(props: {
           ]}
           action={savePublicationEdit.bind(null, publication.id)}
         >
+          <WikiSection title="Image">
+            <ArtworkImageUpload
+              entityId={publication.id}
+              entitySlug={publication.slug}
+              entityLabel="Publication"
+              currentImagePath={publication.imagePath}
+              currentImageAlt={publication.imageAlt}
+              getUploadUrlAction={getPublicationImageUploadUrlAction}
+              uploadAction={uploadPublicationImageAction}
+            />
+          </WikiSection>
           <PublicationProducts publication={publication} />
         </WikiEditable>
       ) : (

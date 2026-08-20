@@ -1007,6 +1007,103 @@ export async function uploadArtworkImage(
   return { imagePath: resolveImagePath(key) ?? undefined };
 }
 
+// Same shape as uploadArtworkImage above, for publications. Shares
+// getArtworkImageUploadUrl for step 1 (that helper is already
+// entity-agnostic — it only validates content-type and mints a staging
+// key, nothing artwork-specific) rather than duplicating a presign
+// function that would be identical in every way but name.
+export async function uploadPublicationImage(
+  publicationId: string,
+  publicationSlug: string,
+  stagingKey: string,
+  imageAlt?: string,
+): Promise<{ imagePath?: string; error?: string }> {
+  await requireAdmin();
+
+  let staged: Uint8Array;
+  try {
+    staged = await getR2ObjectBytes(stagingKey);
+  } catch (fetchError) {
+    console.error(
+      `Failed to fetch staged image '${stagingKey}' for publication '${publicationId}':`,
+      fetchError,
+    );
+    return { error: "Failed to process image." };
+  }
+
+  if (staged.byteLength > MAX_IMAGE_SIZE_BYTES) {
+    await deleteR2Object(stagingKey).catch(() => {});
+    return { error: "Image must be smaller than 8MB." };
+  }
+
+  let resized: Buffer;
+  try {
+    const sharp = (await import("sharp")).default;
+    resized = await sharp(staged)
+      .resize({
+        width: MAX_IMAGE_DIMENSION,
+        height: MAX_IMAGE_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .toFormat("webp", { quality: WEBP_QUALITY })
+      .toBuffer();
+  } catch (resizeError) {
+    console.error(
+      `Failed to process image for publication '${publicationId}':`,
+      resizeError,
+    );
+    return { error: "Failed to process image." };
+  }
+
+  const key = `archive/publications/${publicationSlug}/${crypto.randomUUID()}.webp`;
+
+  try {
+    await getR2Client().send(
+      new PutObjectCommand({
+        Bucket: getR2BucketName(),
+        Key: key,
+        Body: resized,
+        ContentType: "image/webp",
+      }),
+    );
+  } catch (uploadError) {
+    console.error(
+      `Failed to upload image for publication '${publicationId}':`,
+      uploadError,
+    );
+    return { error: "Failed to upload image." };
+  }
+
+  deleteR2Object(stagingKey).catch((cleanupError) => {
+    console.error(
+      `Uploaded image for publication '${publicationId}', but failed to delete staging object '${stagingKey}':`,
+      cleanupError,
+    );
+  });
+
+  const supabase = getSupabaseServerClient();
+  const { error: dbError } = await supabase
+    .from("publications")
+    .update({
+      image_path: key,
+      ...(imageAlt !== undefined ? { image_alt: imageAlt || null } : {}),
+    })
+    .eq("id", publicationId);
+
+  if (dbError) {
+    console.error(
+      `Uploaded image for publication '${publicationId}', but failed to save image_path:`,
+      dbError.message,
+    );
+    return { error: "Image uploaded, but failed to save." };
+  }
+
+  updateTag(ARCHIVE_TAGS.publications);
+  updateTag(ARCHIVE_TAGS.artworks);
+  return { imagePath: resolveImagePath(key) ?? undefined };
+}
+
 export async function getArtworkProducts(
   artworkId: string,
 ): Promise<Product[]> {

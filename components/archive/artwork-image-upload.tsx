@@ -4,17 +4,18 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
-// Admin-only image upload for an existing artwork. Unlike the create
-// form's plain <input type="file">, this one uploads immediately on
-// selection (via Server Actions, same useTransition pattern as
-// LinkedProductsEditor) since — unlike creation — there's already an
-// artwork id/slug to upload against, so there's no reason to wait for a
-// separate form submit. The server-rendered infobox (a sibling, passed
-// down from the page as a ReactNode — see WikiEditableArtwork) can't be
-// updated by passing state back up through this component, so a successful
-// upload calls router.refresh() to re-fetch the page's server data (now
-// pointing at the new image via the cache tag the upload already busts)
-// rather than trying to thread the new URL through a prop chain.
+// Admin-only image upload for an existing archive entity (artwork or
+// publication today). Unlike the artwork create form's plain
+// <input type="file">, this one uploads immediately on selection (via
+// Server Actions, same useTransition pattern as LinkedProductsEditor)
+// since — unlike creation — there's already an id/slug to upload against,
+// so there's no reason to wait for a separate form submit. The
+// server-rendered infobox (a sibling, passed down from the page as a
+// ReactNode — see WikiEditableArtwork/WikiEditable) can't be updated by
+// passing state back up through this component, so a successful upload
+// calls router.refresh() to re-fetch the page's server data (now pointing
+// at the new image via the cache tag the upload already busts) rather than
+// trying to thread the new URL through a prop chain.
 //
 // The actual upload is a 3-step sequence, not one action call: get a
 // presigned URL, PUT the file directly to R2 from the browser (bypasses
@@ -23,23 +24,25 @@ import { useRef, useState, useTransition } from "react";
 // real-world image size), then tell the server to process what's now
 // staged in R2. No file bytes ever go through a Server Action.
 export function ArtworkImageUpload({
-  artworkId,
-  artworkSlug,
+  entityId,
+  entitySlug,
+  entityLabel = "Artwork",
   currentImagePath,
   currentImageAlt,
   getUploadUrlAction,
   uploadAction,
 }: {
-  artworkId: string;
-  artworkSlug: string;
+  entityId: string;
+  entitySlug: string;
+  entityLabel?: string;
   currentImagePath: string | null;
   currentImageAlt: string | null;
   getUploadUrlAction: (
     contentType: string,
   ) => Promise<{ uploadUrl?: string; stagingKey?: string; error?: string }>;
   uploadAction: (
-    artworkId: string,
-    artworkSlug: string,
+    entityId: string,
+    entitySlug: string,
     stagingKey: string,
   ) => Promise<{ imagePath?: string; error?: string }>;
 }) {
@@ -76,7 +79,7 @@ export function ArtworkImageUpload({
         return;
       }
 
-      const result = await uploadAction(artworkId, artworkSlug, stagingKey);
+      const result = await uploadAction(entityId, entitySlug, stagingKey);
       if (result.error) {
         setError(result.error);
         return;
@@ -96,7 +99,7 @@ export function ArtworkImageUpload({
         <div className="relative aspect-square w-32 overflow-hidden border border-ws-border bg-neutral-50 dark:bg-neutral-900">
           <Image
             src={preview}
-            alt={currentImageAlt || "Artwork image"}
+            alt={currentImageAlt || `${entityLabel} image`}
             fill
             sizes="128px"
             className="object-cover"
