@@ -16,31 +16,31 @@ export const metadata = {
   },
 };
 
-// TODO: swap for real marketing banner images once they exist. The second
-// source in each pair is a real portrait photo from picsum.photos (see the
-// TEMPORARY remotePattern in next.config.ts) standing in for a genuine
-// mobile crop, so the aspect-ratio picker in BannerCarousel has something
-// actually portrait to choose on mobile instead of the same landscape image
-// twice. Replace both URLs in each pair with real desktop/mobile crops when
-// they exist, then remove the picsum.photos remotePattern.
+// TODO: swap for real marketing banner images once they exist. Both sources
+// in each pair are placeholders from picsum.photos (see the TEMPORARY
+// remotePattern in next.config.ts) — landscape for desktop, portrait for
+// mobile — so the aspect-ratio picker in BannerCarousel has a genuinely
+// distinct candidate for each breakpoint instead of the same image twice.
+// Replace both URLs in each pair with real desktop/mobile crops when they
+// exist, then remove the picsum.photos remotePattern.
 const PLACEHOLDER_BANNER_IMAGES: BannerCarouselImage[] = [
   {
     sources: [
-      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://picsum.photos/seed/ws-banner-1/1600/900",
       "https://picsum.photos/seed/ws-banner-1/900/1600",
     ],
     alt: "Placeholder banner 1",
   },
   {
     sources: [
-      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://picsum.photos/seed/ws-banner-2/1600/900",
       "https://picsum.photos/seed/ws-banner-2/900/1600",
     ],
     alt: "Placeholder banner 2",
   },
   {
     sources: [
-      "https://images.weirdstrange.com/banners/home-banner.png",
+      "https://picsum.photos/seed/ws-banner-3/1600/900",
       "https://picsum.photos/seed/ws-banner-3/900/1600",
     ],
     alt: "Placeholder banner 3",
