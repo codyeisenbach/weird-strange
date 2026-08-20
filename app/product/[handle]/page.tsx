@@ -1,4 +1,4 @@
-import { GridTileImage } from "components/grid/tile";
+import { ProductCards } from "components/grid";
 import { JsonLd } from "components/seo/json-ld";
 import { Gallery } from "components/product/gallery";
 import {
@@ -15,15 +15,11 @@ import {
 } from "lib/shopify/structured-data";
 import type { Image } from "lib/shopify/types";
 import {
-  getColorImage,
   getColorOption,
-  getDefaultColor,
-  getVariantSearchParams,
   isColorTagged,
   matchesColor,
 } from "lib/shopify/variant-matching";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -179,41 +175,13 @@ async function RelatedProducts({ id }: { id: string }) {
     <div className="py-8 px-4">
       <h2 className="mb-4 text-2xl font-bold">Related Products</h2>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
-        {relatedProducts.map((product) => {
-          const color = getDefaultColor(product);
-          const variantParams = getVariantSearchParams(product, color);
-          const href = variantParams
-            ? `/product/${product.handle}?${variantParams}`
-            : `/product/${product.handle}`;
-          const relatedImage =
-            getColorImage(product, color) ?? product.featuredImage;
-
-          return (
-            <li
-              key={product.handle}
-              className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-            >
-              <Link
-                className="relative h-full w-full"
-                href={href}
-                prefetch={true}
-              >
-                <GridTileImage
-                  alt={relatedImage?.altText || product.title}
-                  label={{
-                    title: product.title,
-                    amount: product.priceRange.maxVariantPrice.amount,
-                    currencyCode:
-                      product.priceRange.maxVariantPrice.currencyCode,
-                  }}
-                  src={relatedImage?.url}
-                  fill
-                  sizes="(min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, (min-width: 475px) 50vw, 100vw"
-                />
-              </Link>
-            </li>
-          );
-        })}
+        {relatedProducts.map((product) => (
+          <ProductCards
+            key={product.handle}
+            product={product}
+            className="w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
+          />
+        ))}
       </ul>
     </div>
   );
