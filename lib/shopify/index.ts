@@ -8,7 +8,7 @@ import { ensureStartsWith } from "lib/utils";
 import {
   unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
-  revalidateTag,
+  updateTag,
 } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -594,11 +594,11 @@ export async function revalidate(req: NextRequest): Promise<NextResponse> {
   }
 
   if (isCollectionUpdate) {
-    revalidateTag(TAGS.collections, "seconds");
+    updateTag(TAGS.collections);
   }
 
   if (isProductUpdate) {
-    revalidateTag(TAGS.products, "seconds");
+    updateTag(TAGS.products);
   }
 
   return NextResponse.json({ status: 200, revalidated: true, now: Date.now() });

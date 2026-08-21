@@ -849,7 +849,7 @@ export async function bulkCreateArtworksForPublications(
   return {};
 }
 
-const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 15 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -923,7 +923,7 @@ export async function uploadArtworkImage(
   // the sharp/DB-write path below.
   if (staged.byteLength > MAX_IMAGE_SIZE_BYTES) {
     await deleteR2Object(stagingKey).catch(() => {});
-    return { error: "Image must be smaller than 8MB." };
+    return { error: "Image must be smaller than 15MB." };
   }
 
   let resized: Buffer;
@@ -1033,7 +1033,7 @@ export async function uploadPublicationImage(
 
   if (staged.byteLength > MAX_IMAGE_SIZE_BYTES) {
     await deleteR2Object(stagingKey).catch(() => {});
-    return { error: "Image must be smaller than 8MB." };
+    return { error: "Image must be smaller than 15MB." };
   }
 
   let resized: Buffer;
