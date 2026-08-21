@@ -1,5 +1,5 @@
-import { createArtistEntry } from "app/archive/actions";
-import { ArchiveTile } from "components/archive/tile";
+import { createArtistEntry, deleteArtistAction } from "app/archive/actions";
+import { ArtistList } from "components/archive/artist-list";
 import { NewEntryForm } from "components/archive/new-entry-form";
 import { getAdminUser } from "lib/admin/auth";
 import { getArtists } from "lib/archive";
@@ -30,24 +30,11 @@ export default async function ArtistsPage() {
         </div>
       ) : null}
 
-      {artists.length === 0 ? (
-        <p className="mt-6 text-lg text-ws-text-muted">
-          No artists found in the archive.
-        </p>
-      ) : (
-        <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {artists.map((artist) => (
-            <li key={artist.id}>
-              <ArchiveTile
-                href={`/archive/artists/${artist.slug}`}
-                src={artist.imagePath}
-                alt={artist.imageAlt || artist.name}
-                title={artist.name}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <ArtistList
+        artists={artists}
+        admin={Boolean(admin)}
+        deleteAction={deleteArtistAction}
+      />
     </section>
   );
 }

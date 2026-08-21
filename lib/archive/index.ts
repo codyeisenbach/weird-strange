@@ -1171,3 +1171,121 @@ export async function unlinkArtworkProduct(
   updateTag(ARCHIVE_TAGS.artworks);
   return {};
 }
+
+// Best-effort R2 cleanup for a hard-deleted row — never blocks or fails the
+// caller over a storage error, since a leftover object under
+// archive/artworks|publications/ isn't a functional problem, just storage
+// that isn't reclaimed (same reasoning as staging-object cleanup above).
+async function cleanupImage(imagePath: string | null): Promise<void> {
+  if (!imagePath) return;
+  await deleteR2Object(imagePath).catch((cleanupError) => {
+    console.error(`Failed to delete R2 object '${imagePath}':`, cleanupError);
+  });
+}
+
+// Hard delete — no soft-delete/archived flag exists on this table. Cascades
+// at the DB level (artworks.artist_id references artists(id) on delete
+// cascade, supabase/migrations/20260817151312_artworks.sql) mean this also
+// destroys every artwork by this artist, which the caller-facing action
+// must warn about before calling this. Artwork images would otherwise be
+// orphaned in R2 by that cascade (the DB doesn't know about R2), so this
+// looks up every about-to-be-cascaded artwork's image_path itself and
+// cleans those up too, in addition to the artist's own image.
+export async function deleteArtist(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const supabase = getSupabaseServerClient();
+
+  const { data: cascadedArtworks, error: lookupError } = await supabase
+    .from("artworks")
+    .select("image_path")
+    .eq("artist_id", id);
+
+  if (lookupError) {
+    console.error(
+      `Failed to look up artworks for artist '${id}' before delete:`,
+      lookupError.message,
+    );
+    return { error: "Failed to delete artist." };
+  }
+
+  const { data: row, error } = await supabase
+    .from("artists")
+    .delete()
+    .eq("id", id)
+    .select("image_path")
+    .single();
+
+  if (error) {
+    console.error(`Failed to delete artist '${id}':`, error.message);
+    return { error: "Failed to delete artist." };
+  }
+
+  await Promise.all([
+    cleanupImage(row?.image_path ?? null),
+    ...(cascadedArtworks ?? []).map((artwork) =>
+      cleanupImage(artwork.image_path),
+    ),
+  ]);
+
+  updateTag(ARCHIVE_TAGS.artists);
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.publications);
+  return {};
+}
+
+// Hard delete. Linked artworks survive (artworks.publication_id references
+// publications(id) on delete set null) — they just lose their publication
+// link, so no artwork image cleanup is needed here, only the publication's
+// own image.
+export async function deletePublication(
+  id: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const supabase = getSupabaseServerClient();
+
+  const { data: row, error } = await supabase
+    .from("publications")
+    .delete()
+    .eq("id", id)
+    .select("image_path")
+    .single();
+
+  if (error) {
+    console.error(`Failed to delete publication '${id}':`, error.message);
+    return { error: "Failed to delete publication." };
+  }
+
+  await cleanupImage(row?.image_path ?? null);
+
+  updateTag(ARCHIVE_TAGS.publications);
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.artists);
+  return {};
+}
+
+// Hard delete. artwork_products rows cascade automatically (artwork_products
+// .artwork_id references artworks(id) on delete cascade) — no manual
+// join-table cleanup needed, only the artwork's own image.
+export async function deleteArtwork(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const supabase = getSupabaseServerClient();
+
+  const { data: row, error } = await supabase
+    .from("artworks")
+    .delete()
+    .eq("id", id)
+    .select("image_path")
+    .single();
+
+  if (error) {
+    console.error(`Failed to delete artwork '${id}':`, error.message);
+    return { error: "Failed to delete artwork." };
+  }
+
+  await cleanupImage(row?.image_path ?? null);
+
+  updateTag(ARCHIVE_TAGS.artworks);
+  updateTag(ARCHIVE_TAGS.artists);
+  updateTag(ARCHIVE_TAGS.publications);
+  return {};
+}

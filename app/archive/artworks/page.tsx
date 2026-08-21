@@ -1,8 +1,9 @@
 import {
   createArtworkEntry,
+  deleteArtworkAction,
   getArtworkImageUploadUrlAction,
 } from "app/archive/actions";
-import { ArchiveTile } from "components/archive/tile";
+import { ArtworkList } from "components/archive/artwork-list";
 import { NewArtworkForm } from "components/archive/new-artwork-form";
 import { getAdminUser } from "lib/admin/auth";
 import { getArtists, getArtworks, getPublications } from "lib/archive";
@@ -40,24 +41,11 @@ export default async function ArtworksPage() {
         </div>
       ) : null}
 
-      {artworks.length === 0 ? (
-        <p className="mt-6 text-lg text-ws-text-muted">
-          No artworks found in the archive.
-        </p>
-      ) : (
-        <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {artworks.map((artwork) => (
-            <li key={artwork.id}>
-              <ArchiveTile
-                href={`/archive/artworks/${artwork.slug}`}
-                src={artwork.imagePath}
-                alt={artwork.imageAlt || artwork.title}
-                title={artwork.title}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <ArtworkList
+        artworks={artworks}
+        admin={Boolean(admin)}
+        deleteAction={deleteArtworkAction}
+      />
     </section>
   );
 }

@@ -1,5 +1,8 @@
-import { createPublicationEntry } from "app/archive/actions";
-import { ArchiveTile } from "components/archive/tile";
+import {
+  createPublicationEntry,
+  deletePublicationAction,
+} from "app/archive/actions";
+import { PublicationList } from "components/archive/publication-list";
 import { NewEntryForm } from "components/archive/new-entry-form";
 import { getAdminUser } from "lib/admin/auth";
 import { getPublications } from "lib/archive";
@@ -33,24 +36,11 @@ export default async function PublicationsPage() {
         </div>
       ) : null}
 
-      {publications.length === 0 ? (
-        <p className="mt-6 text-lg text-ws-text-muted">
-          No publications found in the archive.
-        </p>
-      ) : (
-        <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {publications.map((publication) => (
-            <li key={publication.id}>
-              <ArchiveTile
-                href={`/archive/publications/${publication.slug}`}
-                src={publication.imagePath}
-                alt={publication.imageAlt || publication.title}
-                title={publication.title}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <PublicationList
+        publications={publications}
+        admin={Boolean(admin)}
+        deleteAction={deletePublicationAction}
+      />
     </section>
   );
 }

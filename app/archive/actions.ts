@@ -6,6 +6,9 @@ import {
   createArtist,
   createArtwork,
   createPublication,
+  deleteArtist,
+  deleteArtwork,
+  deletePublication,
   getArtworkImageUploadUrl,
   linkArtworkProduct,
   unlinkArtworkProduct,
@@ -253,4 +256,28 @@ export async function bulkLinkArtistPublicationsAction(
     artistName,
     publicationIds,
   );
+}
+
+// Called from each listing page (not a detail page), so unlike
+// createXEntry there's no redirect() afterward — the caller removes the
+// deleted item from local list state itself.
+export async function deleteArtistAction(
+  id: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  return deleteArtist(id);
+}
+
+export async function deletePublicationAction(
+  id: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  return deletePublication(id);
+}
+
+export async function deleteArtworkAction(
+  id: string,
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  return deleteArtwork(id);
 }
